@@ -14,7 +14,7 @@ def api_pull():
         response = requests.get(api_url, timeout=10)
         response.raise_for_status()
         result = response.json()
-        return result.get('pws')
+        return result.get('pws')[0]
     except requests.exceptions.RequestException as e:
         print(f'API request failed: {e}')
         raise e
@@ -91,7 +91,10 @@ if __name__ == '__main__':
 
     # Rotate passwords
     for email in users:
-        new_pass = api_pull()[0]  # Take only the first password from the list
+        new_pass = api_pull()  # Take only the first password from the list
         users[email] = new_pass
+    # print(users)
 
     update_secret("Users", users)
+
+    # print(api_pull())
