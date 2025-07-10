@@ -76,21 +76,50 @@ def s3_upload(file_path: str, bucket_name: str, object_name: str) -> None:
 
 def api_pull():
     '''Pulls info from the API into a json'''
-    api_url = 'https://makemeapassword.ligos.net/api/v1/passphrase/json'
+    api_url = 'https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T'
     try:
-        response = requests.get(api_url, timeout=(10, 10))  # added timeout
-        if response.status_code == 200:
-            print(response.json())
-            return response.json()
-        else:
-            print(f'Failed to fetch. {response.status_code}')
-            return None
-    except requests.exceptions.Timeout:
-        print('Request timed out.')
-        return None
+        response = requests.get(api_url, timeout=10)  # added timeout
+        response.raise_for_status()
+        result = response.json()
+        # if response.status_code == 200:
+        # print(response.json())
+        print(result.get('pws'))
+        return result.get('pws')
+        # else:
+        #     print(f'Failed to fetch. {response.status_code}')
+        #     return None
+    # except requests.exceptions.Timeout:
+    #     print('Request timed out.')
+    #     return None
     except requests.exceptions.RequestException as e:
         print(f'API request failed: {e}')
-        return None
+        raise e
+        # return None
+
+
+def get_secret():
+
+    secret_name = "Users"
+    region_name = "us-east-1"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session(profile_name='devops-trainee')
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    secret = get_secret_value_response['SecretString']
+    print(secret)
 
 
 # fix: this was incorrectly indented inside API_pull before
@@ -99,4 +128,7 @@ if __name__ == '__main__':
     #     s3_upload('./bucket_names.txt',
     #               'firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192',
     #               'first object')
-    api_pull()
+    new_pass = api_pull()
+    users['alice@example.com'] = new_pass
+    print(users)
+    get_secret()
