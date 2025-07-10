@@ -140,7 +140,8 @@ def update_secret(secret_name, updated_dict):
             SecretId=secret_name,
             SecretString=json.dumps(updated_dict)
         )
-        print(f'Secret updated: {response}')
+        print('Secret Updated Successfully!')
+        # print(f'Secret updated: {response}')
     except ClientError as e:
         print(f'Error! {e}')
 
@@ -156,6 +157,14 @@ if __name__ == '__main__':
     # print(users)
     # get_secret()
     users = get_secret()
+    json_data = json.dumps(users)
+    temp_file_name = create_temp_file(
+        size=1, file_name='users.json', file_content=json_data)
+    bucket_name = 'firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192'
+    object_name = 'secrets/users.json'
+    s3_upload(file_path=temp_file_name,
+              bucket_name=bucket_name, object_name=object_name)
+
     for email in users:
         new_pass = api_pull()[0:9]
         users[email] = new_pass
