@@ -1,6 +1,7 @@
 '''DOCSTRING
 this document fucks shit up
 '''
+import json
 import uuid
 import boto3
 from botocore.exceptions import ClientError
@@ -12,9 +13,18 @@ import requests
 # s3_resource.meta.client.generate_presigned_url()
 
 
-users = {
-    "alice@example.com": "password123",
-}
+# users = {
+#     "alice@example.com": "password123",
+#     "bob@example.com": "securePass456",
+#     "carol@example.com": "qwerty789",
+#     "dave@example.com": "letMeIn321",
+#     "eve@example.com": "hunter2!",
+#     "frank@example.com": "passWORD987",
+#     "grace@example.com": "1234secure",
+#     "heidi@example.com": "myp@ssw0rd",
+#     "ivan@example.com": "adminAccess1",
+#     "judy@example.com": "Pa$$w0rd2025"
+# }
 
 
 def create_bucket_name(bucket_prefix):
@@ -83,7 +93,7 @@ def api_pull():
         result = response.json()
         # if response.status_code == 200:
         # print(response.json())
-        print(result.get('pws'))
+        # print(result.get('pws'))
         return result.get('pws')
         # else:
         #     print(f'Failed to fetch. {response.status_code}')
@@ -98,7 +108,6 @@ def api_pull():
 
 
 def get_secret():
-
     secret_name = "Users"
     region_name = "us-east-1"
 
@@ -106,20 +115,34 @@ def get_secret():
     session = boto3.session.Session(profile_name='devops-trainee')
     client = session.client(
         service_name='secretsmanager',
-        region_name=region_name
-    )
-
+        region_name=region_name)
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
-        )
+            SecretId=secret_name)
     except ClientError as e:
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
 
-    secret = get_secret_value_response['SecretString']
-    print(secret)
+    secret_str = get_secret_value_response['SecretString']
+    secret_dict = json.loads(secret_str)
+    return secret_dict
+
+
+def update_secret(secret_name, updated_dict):
+    ''''*** DOCSTRING***'''
+    session = boto3.session.Session(profile_name='devops-trainee')
+    current_region = session.region_name or 'us-east-2'  # fallback if None
+    client = session.client(service_name='secretsmanager',
+                            region_name=current_region)
+    try:
+        response = client.put_secret_value(
+            SecretId=secret_name,
+            SecretString=json.dumps(updated_dict)
+        )
+        print(f'Secret updated: {response}')
+    except ClientError as e:
+        print(f'Error! {e}')
 
 
 # fix: this was incorrectly indented inside API_pull before
@@ -128,7 +151,13 @@ if __name__ == '__main__':
     #     s3_upload('./bucket_names.txt',
     #               'firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192',
     #               'first object')
-    new_pass = api_pull()
-    users['alice@example.com'] = new_pass
-    print(users)
-    get_secret()
+    # new_pass = api_pull()
+    # users['alice@example.com'] = new_pass
+    # print(users)
+    # get_secret()
+    users = get_secret()
+    for email in users:
+        new_pass = api_pull()[0:9]
+        users[email] = new_pass
+    # print(f'\n ***UPDATED***\n{users}')
+    update_secret("Users", users)
