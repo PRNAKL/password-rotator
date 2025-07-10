@@ -16,6 +16,7 @@ def api_pull():
         result = response.json()
         return result.get('pws')[0]
     except requests.exceptions.RequestException as e:
+        ``
         print(f'API request failed: {e}')
         raise e
 
@@ -96,5 +97,3 @@ if __name__ == '__main__':
     # print(users)
 
     update_secret("Users", users)
-
-    # print(api_pull())
