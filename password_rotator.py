@@ -134,13 +134,12 @@ def s3_upload(file_path: str, bucket_name: str, object_name: str) -> None:
     except ClientError as e:
         print(e)
 
+
+if __name__ == '__main__':
     """Main script logic:
     - Retrieves the 'Users' secret from Secrets Manager.
     - Backs up the current secret to an S3 bucket as a temporary JSON file.
     - Generates new passwords via API for each user and updates the secret."""
-
-
-if __name__ == '__main__':
     users = get_secret()
 
     # Backup current secret to S3
