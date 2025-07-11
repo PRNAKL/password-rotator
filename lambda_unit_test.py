@@ -11,7 +11,7 @@ This module uses pytest and moto to:
 import json
 import pytest
 import boto3
-from moto import mock_secretsmanager, mock_s3
+from moto import mock_aws
 
 from password_rotator import (
     get_secret,
@@ -30,7 +30,7 @@ def aws_setup():
     - Creates a fake Secrets Manager with a secret named 'Users'
     - Creates a fake S3 bucket named 'test-bucket'
     """
-    with mock_secretsmanager(), mock_s3():
+    with mock_aws():
         secrets = boto3.client("secretsmanager", region_name="us-east-1")
         secrets.create_secret(
             Name="Users",
