@@ -31,7 +31,7 @@ def api_pull():
         raise e
 
 
-def get_secret():
+def get_secret(session =None):
     """
     Retrieve the current 'Users' secret from AWS Secrets Manager.
 
@@ -47,7 +47,8 @@ def get_secret():
     secret_name = "Users"
     region_name = "us-east-1"
 
-    session = boto3.session.Session(profile_name='devops-trainee')
+    if session is None:
+        session = boto3.session.Session(profile_name='devops-trainee')
     client = session.client(
         service_name='secretsmanager',
         region_name=region_name
@@ -61,8 +62,7 @@ def get_secret():
     except ClientError as e:
         raise e
 
-
-def update_secret(secret_name, updated_dict):
+def update_secret(secret_name, updated_dict, session=None):
     """
     Update a given secret in AWS Secrets Manager with new data.
 
@@ -76,7 +76,8 @@ def update_secret(secret_name, updated_dict):
     Raises:
         botocore.exceptions.ClientError: If the secret update fails.
     """
-    session = boto3.session.Session(profile_name='devops-trainee')
+    if session is None:
+        session = boto3.session.Session(profile_name='devops-trainee')
     current_region = session.region_name or 'us-east-2'
     client = session.client(service_name='secretsmanager',
                             region_name=current_region)
@@ -111,7 +112,7 @@ def create_temp_file(size, file_name, file_content):
     return random_file_name
 
 
-def s3_upload(file_path: str, bucket_name: str, object_name: str) -> None:
+def s3_upload(file_path: str, bucket_name: str, object_name: str, session =None) -> None:
     """
     Upload a local file to a specified AWS S3 bucket and object key.
 
@@ -127,7 +128,8 @@ def s3_upload(file_path: str, bucket_name: str, object_name: str) -> None:
         botocore.exceptions.ClientError: If the upload fails.
     """
     try:
-        session = boto3.session.Session(profile_name='devops-trainee')
+        if session is None:
+            session = boto3.session.Session(profile_name='devops-trainee')
         s3 = session.client('s3')
         s3.upload_file(file_path, bucket_name, object_name)
         print(f'Uploaded {file_path} to s3://{bucket_name}/{object_name}')
