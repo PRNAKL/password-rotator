@@ -1,19 +1,13 @@
-"""Test suite for the password_rotator utility functions.
-
-This module tests utility functions used in password rotation and backup.
-It includes:
-- Mocking of AWS Secrets Manager and S3 using moto
-- Testing of secret retrieval and updates
-- Temporary file creation validation
-- S3 upload functionality
-- Password generation via external API
-- Full secret backup and password rotation workflow
-"""
-
 import json
+import os
 import pytest
 import boto3
 from moto import mock_aws
+
+# Dummy AWS credentials for Moto
+os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 from password_rotator import (
     get_secret,
@@ -23,144 +17,90 @@ from password_rotator import (
     api_pull,
 )
 
-
 @pytest.fixture
 def aws_setup():
-    """Mock AWS Secrets Manager and S3 for isolated tests.
-
-    This fixture:
-    - Creates a mock Secrets Manager client with a secret named 'Users'
-    - Creates a mock S3 bucket named 'test-bucket'
-
-    Yields:
-        None: Used for pytest fixture execution.
-    """
+    """Mock AWS Secrets Manager and S3 using Moto."""
     with mock_aws():
-        secrets = boto3.client("secretsmanager", region_name="us-east-1")
+        # Optionally you can omit profile_name to avoid profile lookup
+        session = boto3.Session(region_name='us-east-1')
+        secrets = session.client('secretsmanager')
         secrets.create_secret(
-            Name="Users",
+            Name='Users',
             SecretString=json.dumps({
-                "alice@example.com": "oldpass1",
-                "bob@example.com": "oldpass2"
+                'alice@example.com': 'oldpass1',
+                'bob@example.com': 'oldpass2'
             })
         )
-
-        s3 = boto3.client("s3", region_name="us-east-1")
-        s3.create_bucket(Bucket="test-bucket")
-
-        yield
-
+        session.client('s3').create_bucket(Bucket='test-bucket')
+        yield session
 
 def test_get_secret(aws_setup):
-    """Test that get_secret() returns a valid dictionary.
+    """
+    Test that get_secret() returns a valid dictionary.
 
     Args:
-        aws_setup (fixture): Sets up mocked AWS Secrets Manager.
+        aws_setup (boto3.Session): A mocked boto3 session with Secrets Manager configured.
 
     Asserts:
-        - Return type is a dict.
-        - Contains expected keys.
+        - The returned value is a dictionary.
+        - The dictionary contains the key 'alice@example.com'.
     """
-    secret = get_secret()
+    secret = get_secret(session=aws_setup)
     assert isinstance(secret, dict)
-    assert "alice@example.com" in secret
-
+    assert 'alice@example.com' in secret
 
 def test_update_secret(aws_setup):
-    """Test that update_secret() properly updates the stored secret.
+    """
+    Test that update_secret() properly updates the stored secret.
 
     Args:
-        aws_setup (fixture): Sets up mocked AWS Secrets Manager.
+        aws_setup (boto3.Session): A mocked boto3 session with Secrets Manager configured.
 
     Asserts:
-        - Secret data is updated in mock Secrets Manager.
+        - The updated secret contains the new password for 'alice@example.com'.
     """
-    new_data = {
-        "alice@example.com": "newpass1",
-        "bob@example.com": "newpass2"
-    }
-    update_secret("Users", new_data)
-
-    client = boto3.client("secretsmanager", region_name="us-east-1")
-    updated = json.loads(client.get_secret_value(
-        SecretId="Users")["SecretString"])
-    assert updated["alice@example.com"] == "newpass1"
-
+    new_data = {'alice@example.com': 'newpass1', 'bob@example.com': 'newpass2'}
+    update_secret('Users', new_data, session=aws_setup)
+    client = aws_setup.client('secretsmanager')
+    updated = client.get_secret_value(SecretId='Users')['SecretString']
+    assert json.loads(updated)['alice@example.com'] == 'newpass1'
 
 def test_create_temp_file_creates_file():
-    """Test that create_temp_file() creates a file with the correct content.
+    """
+    Test that create_temp_file() writes the correct JSON content to a file.
 
     Asserts:
-        - The created file contains the expected JSON string.
+        - The file content matches the JSON string provided.
     """
-    content = json.dumps({"user": "pass"})
-    filename = create_temp_file(1, "testfile.json", content)
-
-    with open(filename, "r", encoding="utf-8") as f:
-        contents = f.read()
-        assert content in contents
-
+    content = json.dumps({'user': 'pass'})
+    filename = create_temp_file(1, 'testfile.json', content)
+    with open(filename, 'r', encoding='utf-8') as f:
+        assert content in f.read()
 
 def test_s3_upload_and_read_back(aws_setup):
-    """Test uploading and reading a file to/from mocked S3.
+    """
+    Test uploading a file to S3 and reading it back from the mock bucket.
 
     Args:
-        aws_setup (fixture): Sets up mocked AWS Secrets Manager and S3.
+        aws_setup (boto3.Session): A mocked boto3 session with S3 configured.
 
     Asserts:
-        - The uploaded content is correctly stored in mock S3.
+        - The content uploaded to S3 is retrievable and matches the original.
     """
-    content = json.dumps({"foo": "bar"})
-    file_path = create_temp_file(1, "foo.json", content)
-
-    s3_upload(file_path, "test-bucket", "backups/foo.json")
-
-    s3 = boto3.client("s3", region_name="us-east-1")
-    result = s3.get_object(Bucket="test-bucket", Key="backups/foo.json")
-    result_content = result["Body"].read().decode("utf-8")
-
-    assert content in result_content
-
+    content = json.dumps({'foo': 'bar'})
+    file_path = create_temp_file(1, 'foo.json', content)
+    s3_upload(file_path, 'test-bucket', 'backups/foo.json', session=aws_setup)
+    result = aws_setup.client('s3').get_object(Bucket='test-bucket', Key='backups/foo.json')
+    assert content in result['Body'].read().decode('utf-8')
 
 def test_api_pull_returns_password():
-    """Test that api_pull() returns a valid password string.
+    """
+    Test that api_pull() returns a valid password string.
 
     Asserts:
-        - Return type is str.
-        - Length is at least 8 characters.
+        - The returned password is a string.
+        - The length of the password is at least 8 characters.
     """
     result = api_pull()
     assert isinstance(result, str)
     assert len(result) >= 8
-
-
-def rotate_and_backup_users(bucket_name: str, object_name: str) -> None:
-    """Backs up current secrets to S3 and rotates user passwords.
-
-    Args:
-        bucket_name (str): The name of the S3 bucket to upload to.
-        object_name (str): The S3 object key under which to store the backup.
-
-    Returns:
-        None
-    """
-    users = get_secret()
-    json_data = json.dumps(users)
-    temp_file_name = create_temp_file(
-        size=1, file_name='users.json', file_content=json_data)
-
-    s3_upload(file_path=temp_file_name,
-              bucket_name=bucket_name, object_name=object_name)
-
-    for email in users:
-        new_pass = api_pull()
-        users[email] = new_pass
-
-    update_secret("Users", users)
-
-
-if __name__ == '__main__':
-    rotate_and_backup_users(
-        'firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192',
-        'secrets/users.json'
-    )
