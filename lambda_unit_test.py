@@ -19,9 +19,12 @@ from password_rotator import (
 
 @pytest.fixture
 def aws_setup():
-    """Mock AWS Secrets Manager and S3 using Moto."""
+    """Mocks AWS Secrets Manager and S3 using Moto.
+
+    Yields:
+        boto3.Session: A mocked boto3 session with configured AWS clients for testing.
+    """
     with mock_aws():
-        # Optionally you can omit profile_name to avoid profile lookup
         session = boto3.Session(region_name='us-east-1')
         secrets = session.client('secretsmanager')
         secrets.create_secret(
@@ -35,29 +38,27 @@ def aws_setup():
         yield session
 
 def test_get_secret(aws_setup):
-    """
-    Test that get_secret() returns a valid dictionary.
+    """Tests that get_secret() returns a dictionary containing expected data.
 
     Args:
-        aws_setup (boto3.Session): A mocked boto3 session with Secrets Manager configured.
+        aws_setup (boto3.Session): Mocked session with a Secrets Manager client.
 
     Asserts:
-        - The returned value is a dictionary.
-        - The dictionary contains the key 'alice@example.com'.
+        bool: The returned secret is a dictionary.
+        bool: The dictionary contains the key 'alice@example.com'.
     """
     secret = get_secret(session=aws_setup)
     assert isinstance(secret, dict)
     assert 'alice@example.com' in secret
 
 def test_update_secret(aws_setup):
-    """
-    Test that update_secret() properly updates the stored secret.
+    """Tests that update_secret() correctly overwrites the secret value.
 
     Args:
-        aws_setup (boto3.Session): A mocked boto3 session with Secrets Manager configured.
+        aws_setup (boto3.Session): Mocked session with a Secrets Manager client.
 
     Asserts:
-        - The updated secret contains the new password for 'alice@example.com'.
+        bool: The updated secret reflects the new password for 'alice@example.com'.
     """
     new_data = {'alice@example.com': 'newpass1', 'bob@example.com': 'newpass2'}
     update_secret('Users', new_data, session=aws_setup)
@@ -66,11 +67,10 @@ def test_update_secret(aws_setup):
     assert json.loads(updated)['alice@example.com'] == 'newpass1'
 
 def test_create_temp_file_creates_file():
-    """
-    Test that create_temp_file() writes the correct JSON content to a file.
+    """Tests that create_temp_file() writes the correct content to disk.
 
     Asserts:
-        - The file content matches the JSON string provided.
+        bool: The file contains the exact JSON string passed to it.
     """
     content = json.dumps({'user': 'pass'})
     filename = create_temp_file(1, 'testfile.json', content)
@@ -78,14 +78,13 @@ def test_create_temp_file_creates_file():
         assert content in f.read()
 
 def test_s3_upload_and_read_back(aws_setup):
-    """
-    Test uploading a file to S3 and reading it back from the mock bucket.
+    """Tests that s3_upload() successfully stores and retrieves a file.
 
     Args:
-        aws_setup (boto3.Session): A mocked boto3 session with S3 configured.
+        aws_setup (boto3.Session): Mocked session with an S3 client.
 
     Asserts:
-        - The content uploaded to S3 is retrievable and matches the original.
+        bool: The file content retrieved from S3 matches the uploaded content.
     """
     content = json.dumps({'foo': 'bar'})
     file_path = create_temp_file(1, 'foo.json', content)
@@ -94,12 +93,11 @@ def test_s3_upload_and_read_back(aws_setup):
     assert content in result['Body'].read().decode('utf-8')
 
 def test_api_pull_returns_password():
-    """
-    Test that api_pull() returns a valid password string.
+    """Tests that api_pull() returns a valid password string.
 
     Asserts:
-        - The returned password is a string.
-        - The length of the password is at least 8 characters.
+        bool: The returned value is a string.
+        bool: The string is at least 8 characters long.
     """
     result = api_pull()
     assert isinstance(result, str)
