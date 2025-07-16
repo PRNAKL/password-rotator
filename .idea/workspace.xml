@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4acc01d5-e602-42cf-86f2-bd44c74b31be" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Terraform_modules/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/Terraform_modules/main.tf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Terraform_modules/outputs.tf" beforeDir="false" afterPath="$PROJECT_DIR$/Terraform_modules/outputs.tf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Terraform_modules/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/Terraform_modules/variables.tf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

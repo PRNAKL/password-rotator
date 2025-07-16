@@ -1,0 +1,1 @@
+bucket_name = "some-kind-of-value"
