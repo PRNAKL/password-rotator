@@ -90,3 +90,39 @@ output "lambda_function_name" {
 output "s3_bucket_name" {
   value = aws_s3_bucket.my_bucket.bucket
 }
+
+# IAM policy granting Secrets Manager and S3 permissions
+resource "aws_iam_policy" "lambda_secrets_s3_policy" {
+  name        = "lambda_secrets_s3_policy"
+  description = "Allows Lambda to access Secrets Manager and S3 bucket for backups"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:UpdateSecret"
+        ]
+        Resource = "*"  # or specify ARN of your secret for tighter security
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject"
+        ]
+        Resource = [
+          "${aws_s3_bucket.my_bucket.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Attach the above policy to the Lambda execution role
+resource "aws_iam_policy_attachment" "lambda_secrets_s3_attach" {
+  name       = "lambda_secrets_s3_attach"
+  roles = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = aws_iam_policy.lambda_secrets_s3_policy.arn
+}
