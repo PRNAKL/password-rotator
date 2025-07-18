@@ -58,7 +58,7 @@ resource "aws_iam_policy_attachment" "lambda_logs" {
 
 # Create the Lambda function itself
 resource "aws_lambda_function" "my_lambda" {
-  function_name = "MyTerraformLambda"  # Name of the function in AWS Lambda console
+  function_name = "THETerraformLambda"  # Name of the function in AWS Lambda console
   role = aws_iam_role.lambda_exec_role.arn  # IAM Role ARN Lambda will assume
   handler = "password_rotator.lambda_handler"  # Format: filename.function (no .py)
   runtime = "python3.9"  # AWS Lambda Python runtime to use
@@ -66,6 +66,14 @@ resource "aws_lambda_function" "my_lambda" {
 
   # Hash the ZIP file contents so Terraform knows when the code changes (triggers re-deploy)
   source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
+
+  environment {
+    variables = {
+      SECRET_NAME = "Users"
+      BUCKET_NAME = aws_s3_bucket.my_bucket.bucket
+      AWS_REGION  = "us-east-1"
+    }
+  }
 
   tags = {
     Environment = "dev"
