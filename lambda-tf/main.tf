@@ -71,7 +71,7 @@ resource "aws_lambda_function" "my_lambda" {
     variables = {
       SECRET_NAME = "Users"
       BUCKET_NAME = aws_s3_bucket.my_bucket.bucket
-      AWS_REGION  = "us-east-1"
+      # AWS_REGION  = "us-east-1"
     }
   }
 

@@ -31,65 +31,75 @@ def api_pull():
         raise e
 
 
-def get_secret(session =None):
+def get_secret(session=None):
     """
     Retrieve the current 'Users' secret from AWS Secrets Manager.
 
-    Assumes the AWS profile 'devops-trainee' is configured.
-    Parses the returned secret string into a Python dictionary.
+    Connects to AWS Secrets Manager and fetches the secret value
+    identified by the fixed secret name "Users" in the 'us-east-1' region.
+
+    Args:
+        session (boto3.session.Session, optional): A boto3 session object.
+            If None, a new default session is created without specifying a profile.
 
     Returns:
-        dict: Dictionary containing the current user-password pairs.
+        dict: Parsed JSON dictionary representing the secret's key-value pairs.
 
     Raises:
-        botocore.exceptions.ClientError: If the secret cannot be retrieved.
+        botocore.exceptions.ClientError: If there is an error retrieving the secret.
     """
     secret_name = "Users"
     region_name = "us-east-1"
 
     if session is None:
-        session = boto3.session.Session(profile_name='devops-trainee')
+        session = boto3.session.Session()  # Default session, no profile forced
     client = session.client(
         service_name='secretsmanager',
         region_name=region_name
     )
 
     try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name)
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
         secret_str = get_secret_value_response['SecretString']
         return json.loads(secret_str)
     except ClientError as e:
+        print(f"Error retrieving secret: {e}")
         raise e
+
 
 def update_secret(secret_name, updated_dict, session=None):
     """
-    Update a given secret in AWS Secrets Manager with new data.
+    Update a secret in AWS Secrets Manager with new data.
+
+    Sends a new JSON-encoded secret string to AWS Secrets Manager,
+    replacing the existing secret value for the specified secret.
 
     Args:
-        secret_name (str): The name of the secret to update.
-        updated_dict (dict): Dictionary of updated key-value pairs (e.g., users and new passwords).
+        secret_name (str): The name or ARN of the secret to update.
+        updated_dict (dict): Dictionary containing updated key-value pairs to store.
+        session (boto3.session.Session, optional): A boto3 session object.
+            If None, a new default session is created without specifying a profile.
 
     Returns:
         None
 
     Raises:
-        botocore.exceptions.ClientError: If the secret update fails.
+        botocore.exceptions.ClientError: If updating the secret fails.
     """
     if session is None:
-        session = boto3.session.Session(profile_name='devops-trainee')
-    current_region = session.region_name or 'us-east-2'
-    client = session.client(service_name='secretsmanager',
-                            region_name=current_region)
+        session = boto3.session.Session()  # Default session, no profile forced
+    current_region = session.region_name or 'us-east-1'
+    client = session.client(service_name='secretsmanager', region_name=current_region)
 
     try:
-        client.put_secret_value(
+        client.update_secret(
             SecretId=secret_name,
             SecretString=json.dumps(updated_dict)
         )
         print('Secret updated successfully!')
     except ClientError as e:
-        print(f'Error! {e}')
+        print(f"Error updating secret: {e}")
+        raise e
 
 
 def create_temp_file(size, file_name, file_content):
@@ -112,29 +122,32 @@ def create_temp_file(size, file_name, file_content):
     return random_file_name
 
 
-def s3_upload(file_path: str, bucket_name: str, object_name: str, session =None) -> None:
+def s3_upload(file_path: str, bucket_name: str, object_name: str, session=None) -> None:
     """
-    Upload a local file to a specified AWS S3 bucket and object key.
+    Upload a local file to an AWS S3 bucket at the specified object key.
 
     Args:
-        file_path (str): Path to the local file to upload.
-        bucket_name (str): Name of the S3 bucket.
-        object_name (str): Key (i.e., path) to store the object under in S3.
+        file_path (str): The local path to the file that should be uploaded.
+        bucket_name (str): The target S3 bucket name.
+        object_name (str): The key (path) to assign to the uploaded object in the bucket.
+        session (boto3.session.Session, optional): A boto3 session object.
+            If None, a new default session is created without specifying a profile.
 
     Returns:
         None
 
     Raises:
-        botocore.exceptions.ClientError: If the upload fails.
+        botocore.exceptions.ClientError: If the upload operation fails.
     """
     try:
         if session is None:
-            session = boto3.session.Session(profile_name='devops-trainee')
+            session = boto3.session.Session()  # Default session, no profile forced
         s3 = session.client('s3')
         s3.upload_file(file_path, bucket_name, object_name)
         print(f'Uploaded {file_path} to s3://{bucket_name}/{object_name}')
     except ClientError as e:
-        print(e)
+        print(f"Error uploading to S3: {e}")
+        raise e
 
 
 if __name__ == '__main__':
