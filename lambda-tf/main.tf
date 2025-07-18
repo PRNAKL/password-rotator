@@ -21,7 +21,7 @@ resource "random_id" "bucket_suffix" {
 
 # Create an S3 bucket for logging, backups, or Lambda usage
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "Terraform-bucket-${random_id.bucket_suffix.hex}"  # Unique name
+  bucket = "terraform-bucket-${random_id.bucket_suffix.hex}"  # Unique name
   force_destroy = true  # Deletes the bucket even if it's not empty (use with caution in production)
 
   tags = {

@@ -16,7 +16,7 @@ def lambda_handler(event, context):
     bucket_name = os.environ.get('BUCKET_NAME', 'your-bucket-name')
 
     # Get the AWS region from environment variable (or default to 'us-east-1')
-    region_name = os.environ.get('AWS_REGION', 'us-east-1')
+    region_name = boto3.Session().region_name
 
     # --- AWS Clients ---
 
