@@ -157,20 +157,26 @@ if __name__ == '__main__':
     - Backs up the current secret to an S3 bucket as a temporary JSON file.
     - Generates new passwords via API for each user and updates the secret.
     """
-    users = get_secret()
 
-    # Backup current secret to S3
-    json_data = json.dumps(users)
-    temp_file_name = create_temp_file(
-        size=1, file_name='users.json', file_content=json_data)
-    bucket_name = 'firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192'
-    object_name = 'secrets/users.json'
-    s3_upload(file_path=temp_file_name,
-              bucket_name=bucket_name, object_name=object_name)
+    try:
+        users = get_secret()
 
-    # Rotate passwords
-    for email in users:
-        new_pass = api_pull()
-        users[email] = new_pass
+        json_data = json.dumps(users)
+        temp_file_name = create_temp_file(
+            size=1, file_name='users.json', file_content=json_data)
+        bucket_name = 'firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192'
+        object_name = 'secrets/users.json'
+        s3_upload(file_path=temp_file_name,
+                  bucket_name=bucket_name, object_name=object_name)
 
-    update_secret("Users", users)
+        os.remove(temp_file_name)  # cleanup temp file
+
+        # Rotate passwords
+        for email in users:
+            new_pass = api_pull()
+            users[email] = new_pass
+
+        update_secret("Users", users)
+
+    except Exception as e:
+        print(f"Error during password rotation process: {e}")
