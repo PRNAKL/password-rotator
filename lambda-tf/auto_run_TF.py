@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+os.environ['AWS_PROFILE'] = 'devops-trainee'
+
 
 # os.environ["AWS_ACCESS_KEY_ID"] = "your-access-key"
 # os.environ["AWS_SECRET_ACCESS_KEY"] = "your-secret-key"
