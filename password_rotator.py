@@ -5,6 +5,7 @@ import uuid
 import boto3
 from botocore.exceptions import ClientError
 import requests
+import os
 
 
 def api_pull():

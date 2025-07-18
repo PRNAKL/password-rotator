@@ -3,6 +3,31 @@ import boto3  # AWS SDK for Python – used to interact with AWS services
 import uuid  # Used to generate unique identifiers (for passwords)
 import json  # Used for parsing and formatting JSON data
 import os  # Used to read environment variables set in Lambda
+import requests  # Add this with your other imports
+
+
+def api_pull():
+    """
+    Pull a randomly generated password from the external API.
+
+    Uses the 'makemeapassword' API to fetch a single 12-character
+    alphanumeric password that includes symbols.
+
+    Returns:
+        str: A randomly generated password string.
+
+    Raises:
+        requests.exceptions.RequestException: If the API call fails or times out.
+    """
+    api_url = 'https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T'
+    try:
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status()
+        result = response.json()
+        return result.get('pws')[0]
+    except requests.exceptions.RequestException as e:
+        print(f'API request failed: {e}')
+        raise e
 
 
 # AWS Lambda entry point function
@@ -43,7 +68,7 @@ def lambda_handler(event, context):
         # Loop through each user in the existing secret
         for user, _ in current_secrets.items():
             # Generate a new password using UUID (take first 12 characters for simplicity)
-            new_pass = str(uuid.uuid4())[:12]
+            new_pass = api_pull()
 
             # Store the new password in the updated dictionary
             updated_secrets[user] = new_pass
