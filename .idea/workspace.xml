@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4acc01d5-e602-42cf-86f2-bd44c74b31be" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/outputs.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Terraform_modules/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/Terraform_modules/main.tf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Terraform_modules/something.tfvars" beforeDir="false" afterPath="$PROJECT_DIR$/main.tf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +61,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "terraform__features__GF",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/Luci/Documents/Code/Password_rotator/password-rotator/Terraform_modules",
+    "last_opened_file_path": "C:/Users/Luci/Documents/Code/Password_rotator/password-rotator",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
