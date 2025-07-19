@@ -1,6 +1,6 @@
 import os
 import subprocess
-
+import json
 import boto3
 from moto.stepfunctions.parser.asl.component.intrinsic.functionname.function_name import FunctionName
 
@@ -37,7 +37,7 @@ def invoke_lambda():
             InvocationType='RequestResponse',
             Payload=json.dumps({})
         )
-        payload = response['payload'].read()
+        payload = response['Payload'].read()
         print(f'Lambda invoked succesfully!: {payload.decode()}')
     except Exception as e:
         print(f'***FAILED***: {e}')
