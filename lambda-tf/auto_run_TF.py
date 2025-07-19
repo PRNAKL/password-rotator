@@ -45,3 +45,4 @@ def invoke_lambda():
 
 if __name__ == "__main__":
     run_terraform()
+    invoke_lambda()
