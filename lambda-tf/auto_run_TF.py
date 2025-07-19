@@ -1,6 +1,9 @@
 import os
 import subprocess
 
+import boto3
+from moto.stepfunctions.parser.asl.component.intrinsic.functionname.function_name import FunctionName
+
 os.environ['AWS_PROFILE'] = 'devops-trainee'
 
 
@@ -23,6 +26,21 @@ def run_terraform():
         print("Terraform deployment successful.")
     except subprocess.CalledProcessError as e:
         print(f"Terraform failed with error: {e}")
+        exit(1)
+
+
+def invoke_lambda():
+    try:
+        lambda_client = boto3.client('lambda', region_name='us-east-1')
+        response = lambda_client.invoke(
+            FunctionName='THETerraformLambda',
+            InvocationType='RequestResponse',
+            Payload=json.dumps({})
+        )
+        payload = response['payload'].read()
+        print(f'Lambda invoked succesfully!: {payload.decode()}')
+    except Exception as e:
+        print(f'***FAILED***: {e}')
 
 
 if __name__ == "__main__":
