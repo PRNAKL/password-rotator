@@ -1,4 +1,6 @@
 # Terraform block specifies required provider plugins and Terraform version
+
+#need to set envirnment variables in terreaform code
 terraform {
   required_providers {
     aws = {
