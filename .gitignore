@@ -1,5 +1,0 @@
-lambda-tf/.terraform
-/lambda-tf/package
-.gitignore
-package
-.venv
