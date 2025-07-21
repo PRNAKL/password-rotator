@@ -2,10 +2,16 @@ import os
 import subprocess
 import json
 import boto3
-from moto.stepfunctions.parser.asl.component.intrinsic.functionname.function_name import FunctionName
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Change to DEBUG for more detailed logs
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 os.environ['AWS_PROFILE'] = 'devops-trainee'
-
 
 # os.environ["AWS_ACCESS_KEY_ID"] = "your-access-key"
 # os.environ["AWS_SECRET_ACCESS_KEY"] = "your-secret-key"
@@ -14,23 +20,24 @@ os.environ['AWS_PROFILE'] = 'devops-trainee'
 
 def run_terraform():
     try:
-        # Initialize Terraform
+        logging.info("Initializing Terraform...")
         subprocess.run(["terraform", "init"], check=True)
 
-        # (Optional) Review the execution plan
+        logging.info("Planning Terraform changes...")
         subprocess.run(["terraform", "plan"], check=True)
 
-        # Apply the Terraform plan automatically (auto-approve avoids prompt)
+        logging.info("Applying Terraform plan...")
         subprocess.run(["terraform", "apply", "-auto-approve"], check=True)
 
-        print("Terraform deployment successful.")
+        logging.info("Terraform deployment successful.")
     except subprocess.CalledProcessError as e:
-        print(f"Terraform failed with error: {e}")
+        logging.error(f"Terraform failed with error: {e}")
         exit(1)
 
 
 def invoke_lambda():
     try:
+        logging.info("Invoking Lambda function 'THETerraformLambda'...")
         lambda_client = boto3.client('lambda', region_name='us-east-1')
         response = lambda_client.invoke(
             FunctionName='THETerraformLambda',
@@ -38,9 +45,9 @@ def invoke_lambda():
             Payload=json.dumps({})
         )
         payload = response['Payload'].read()
-        print(f'Lambda invoked succesfully!: {payload.decode()}')
+        logging.info(f"Lambda invoked successfully! Response payload: {payload.decode()}")
     except Exception as e:
-        print(f'***FAILED***: {e}')
+        logging.error(f"Failed to invoke Lambda: {e}")
 
 
 if __name__ == "__main__":

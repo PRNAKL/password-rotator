@@ -1,6 +1,5 @@
 # Terraform block specifies required provider plugins and Terraform version
 
-#need to set envirnment variables in terreaform code
 terraform {
   required_providers {
     aws = {
@@ -51,6 +50,7 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+# Single Lambda function resource (duplicate block removed)
 resource "aws_lambda_function" "my_lambda" {
   function_name = "THETerraformLambda"
   role          = aws_iam_role.lambda_exec_role.arn
@@ -84,37 +84,6 @@ resource "aws_iam_policy_attachment" "lambda_logs" {
   name = "lambda_logs"  # Friendly name for the policy attachment
   roles = [aws_iam_role.lambda_exec_role.name]  # Attach to the role we created above
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"  # Built-in AWS policy
-}
-
-# Create the Lambda function itself
-resource "aws_lambda_function" "my_lambda" {
-  function_name = "THETerraformLambda"  # Name of the function in AWS Lambda console
-  role = aws_iam_role.lambda_exec_role.arn  # IAM Role ARN Lambda will assume
-  handler = "lambda_function.lambda_handler"  # Format: filename.function (no .py)
-  runtime = "python3.9"  # AWS Lambda Python runtime to use
-  filename = "${path.module}/lambda_function.zip"  # Path to zipped code (relative to main.tf)
-
-  # Hash the ZIP file contents so Terraform knows when the code changes (triggers re-deploy)
-  source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
-
-  timeout = 30
-
-  layers = [
-    "arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:30"
-  ]
-
-  environment {
-    variables = {
-      SECRET_NAME = "Users"
-      BUCKET_NAME = aws_s3_bucket.my_bucket.bucket
-      # AWS_REGION  = "us-east-1"
-    }
-  }
-
-  tags = {
-    Environment = "dev"
-    Owner       = "you"
-  }
 }
 
 # Output the deployed Lambda’s name to the CLI after `terraform apply`
