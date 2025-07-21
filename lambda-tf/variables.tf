@@ -1,5 +1,8 @@
-variable "instance_type" {
-  type = string                     # The type of the variable, in this case a string
-  default = "t2.micro"                 # Default value for the variable
-  description = "The type of EC2 instance" # Description of what this variable represents
+# Example to make your config reusable in the future
+variable "environment" {
+  default = "dev"
+}
+
+variable "secret_name" {
+  default = "Users"
 }
