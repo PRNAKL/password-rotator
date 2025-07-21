@@ -51,6 +51,34 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+resource "aws_lambda_function" "my_lambda" {
+  function_name = "THETerraformLambda"
+  role          = aws_iam_role.lambda_exec_role.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.9"
+  filename      = "${path.module}/lambda_function.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
+  timeout       = 30
+
+  # Lambda layer with Pandas (optional; you already had it)
+  layers = [
+    "arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:30"
+  ]
+
+  environment {
+    variables = {
+      SECRET_NAME = "Users"                                 # This is the secret name used in Python
+      BUCKET_NAME = aws_s3_bucket.my_bucket.bucket          # This uses the generated bucket name
+      PASSWORD_API_URL = "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
+    }
+  }
+
+  tags = {
+    Environment = "dev"
+    Owner       = "you"
+  }
+}
+
 # Attach basic Lambda execution permissions (writes logs to CloudWatch)
 resource "aws_iam_policy_attachment" "lambda_logs" {
   name = "lambda_logs"  # Friendly name for the policy attachment

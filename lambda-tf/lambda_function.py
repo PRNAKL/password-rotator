@@ -37,7 +37,7 @@ def api_pull():
     Raises:
         RequestException: If API call fails or times out.
     """
-    url = 'https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T'  # move to env variables on lambda
+    url = os.environ['PASSWORD_API_URL']# move to env variables on lambda
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
