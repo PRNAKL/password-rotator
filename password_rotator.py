@@ -3,9 +3,18 @@
 import json
 import os
 import uuid
+import logging
 import boto3
 import requests
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, BotoCoreError
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+logger = logging.getLogger(__name__)
 
 
 def api_pull():
@@ -27,7 +36,7 @@ def api_pull():
         result = response.json()
         return result.get("pws")[0]
     except requests.exceptions.RequestException as e:
-        print(f"API request failed: {e}")
+        logger.error("API request failed: %s", e)
         raise
 
 
@@ -52,7 +61,7 @@ def get_secret(session=None):
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
         return json.loads(get_secret_value_response["SecretString"])
     except ClientError as e:
-        print(f"Error retrieving secret: {e}")
+        logger.error("Error retrieving secret: %s", e)
         raise
 
 
@@ -77,9 +86,9 @@ def update_secret(secret_name, updated_dict, session=None):
         client.update_secret(
             SecretId=secret_name, SecretString=json.dumps(updated_dict)
         )
-        print("Secret updated successfully!")
+        logger.info("Secret updated successfully!")
     except ClientError as e:
-        print(f"Error updating secret: {e}")
+        logger.error("Error updating secret: %s", e)
         raise
 
 
@@ -119,9 +128,9 @@ def s3_upload(file_path, bucket_name, object_name, session=None):
     s3 = session.client("s3")
     try:
         s3.upload_file(file_path, bucket_name, object_name)
-        print(f"Uploaded {file_path} to s3://{bucket_name}/{object_name}")
+        logger.info("Uploaded %s to s3://%s/%s", file_path, bucket_name, object_name)
     except ClientError as e:
-        print(f"Error uploading to S3: {e}")
+        logger.error("Error uploading to S3: %s", e)
         raise
 
 
@@ -143,5 +152,7 @@ if __name__ == "__main__":
 
         update_secret("Users", users)
 
+    except (ClientError, BotoCoreError, requests.exceptions.RequestException) as e:
+        logger.error("Error during password rotation process: %s", e)
     except Exception as e:
-        print(f"Error during password rotation process: {e}")
+        logger.error("Unexpected error during password rotation process: %s", e)

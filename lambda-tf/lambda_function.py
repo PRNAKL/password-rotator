@@ -11,7 +11,6 @@ import json
 import logging
 import os
 import uuid
-
 import boto3
 import requests
 from botocore.exceptions import ClientError
@@ -134,13 +133,13 @@ def update_secrets(secrets_client, secret_name, secrets):
         raise
 
 
-def lambda_handler(event, context):
+def lambda_handler(_event, _context):
     """
     Lambda entry point for password rotation and backup.
 
     Args:
-        event: Lambda event object.
-        context: Lambda context object.
+        _event: Lambda event object.
+        _context: Lambda context object.
 
     Returns:
         dict: Response with statusCode and message.

@@ -9,8 +9,8 @@ import subprocess
 import sys
 import json
 import logging
-
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 # Configure logging
 logging.basicConfig(
@@ -58,8 +58,15 @@ def invoke_lambda():
         payload = response["Payload"].read()
         logger.info("Lambda invoked successfully. Response payload: %s", payload.decode())
 
+    except (ClientError, BotoCoreError) as e:
+        logger.error("AWS client error invoking Lambda: %s", e)
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        logger.error("Failed to decode Lambda response payload: %s", e)
+        sys.exit(1)
     except Exception as e:
-        logger.error("Failed to invoke Lambda: %s", e)
+        # If you want to be absolutely safe, catch any unexpected exception but log it explicitly
+        logger.error("Unexpected error invoking Lambda: %s", e)
         sys.exit(1)
 
 
