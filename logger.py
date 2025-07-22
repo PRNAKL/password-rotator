@@ -3,6 +3,7 @@ import logging
 class Logger:
     """ *** DOC STRING *** """
     def __init__(self):
+        '''DOC STRING'''
         # Create logger
         logging.basicConfig(
             level=logging.INFO,
@@ -23,6 +24,7 @@ class Logger:
         return None
 
 if __name__ == "__main__":
+    '''DOC STRING'''
     logger = Logger()
     # DEBUG: 10
     # INFO: 20
@@ -34,3 +36,4 @@ if __name__ == "__main__":
     logger.log_message(30, "message")
     logger.log_message(40, "message")
     logger.log_message(50, "message")
+
