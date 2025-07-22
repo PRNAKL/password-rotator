@@ -64,12 +64,9 @@ def invoke_lambda():
     except json.JSONDecodeError as e:
         logger.error("Failed to decode Lambda response payload: %s", e)
         sys.exit(1)
-    except Exception as e:
-        # If you want to be absolutely safe, catch any unexpected exception but log it explicitly
+    except Exception as e:  # pylint: disable=broad-except
         logger.error("Unexpected error invoking Lambda: %s", e)
         sys.exit(1)
-
-
 if __name__ == "__main__":
     run_terraform()
     invoke_lambda()

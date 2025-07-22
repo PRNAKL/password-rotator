@@ -154,5 +154,5 @@ if __name__ == "__main__":
 
     except (ClientError, BotoCoreError, requests.exceptions.RequestException) as e:
         logger.error("Error during password rotation process: %s", e)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error("Unexpected error during password rotation process: %s", e)
