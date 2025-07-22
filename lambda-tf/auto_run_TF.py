@@ -11,13 +11,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# os.environ['AWS_PROFILE'] = 'devops-trainee'
-
-# os.environ["AWS_ACCESS_KEY_ID"] = "your-access-key"
-# os.environ["AWS_SECRET_ACCESS_KEY"] = "your-secret-key"
-# os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-
-
 def run_terraform():
     try:
         logging.info("Initializing Terraform...")

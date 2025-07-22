@@ -37,7 +37,7 @@ def api_pull():
     Raises:
         RequestException: If API call fails or times out.
     """
-    url = os.environ['PASSWORD_API_URL']# move to env variables on lambda
+    url = os.environ['API_url']# move to env variables on lambda
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
