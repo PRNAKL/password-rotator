@@ -6,7 +6,9 @@ Tests include:
 - Temporary file handling
 - External password API usage
 """
-# pylint: disable=duplicate-code
+
+# pylint: disable=duplicate-code, redefined-outer-name
+
 import json
 import os
 
@@ -51,18 +53,14 @@ def mock_aws_session():
 
 
 def test_get_secret(mock_aws_session):
-    """
-    Tests that get_secret() returns the expected data.
-    """
+    """Tests that get_secret() returns the expected data."""
     secret = get_secret(session=mock_aws_session)
     assert isinstance(secret, dict)
     assert 'alice@example.com' in secret
 
 
 def test_update_secret(mock_aws_session):
-    """
-    Tests that update_secret() properly modifies the secret value.
-    """
+    """Tests that update_secret() properly modifies the secret value."""
     new_data = {'alice@example.com': 'newpass1', 'bob@example.com': 'newpass2'}
     update_secret('Users', new_data, session=mock_aws_session)
     client = mock_aws_session.client('secretsmanager')
@@ -71,9 +69,7 @@ def test_update_secret(mock_aws_session):
 
 
 def test_create_temp_file_creates_file():
-    """
-    Tests that create_temp_file() writes content to disk properly.
-    """
+    """Tests that create_temp_file() writes content to disk properly."""
     content = json.dumps({'user': 'pass'})
     filename = create_temp_file(1, 'testfile.json', content)
     with open(filename, 'r', encoding='utf-8') as f:
@@ -81,9 +77,7 @@ def test_create_temp_file_creates_file():
 
 
 def test_s3_upload_and_read_back(mock_aws_session):
-    """
-    Tests that s3_upload() stores and retrieves a file correctly.
-    """
+    """Tests that s3_upload() stores and retrieves a file correctly."""
     content = json.dumps({'foo': 'bar'})
     file_path = create_temp_file(1, 'foo.json', content)
     s3_upload(file_path, 'test-bucket', 'backups/foo.json', session=mock_aws_session)
@@ -92,9 +86,7 @@ def test_s3_upload_and_read_back(mock_aws_session):
 
 
 def test_api_pull_returns_password():
-    """
-    Tests that api_pull() returns a valid string password.
-    """
+    """Tests that api_pull() returns a valid string password."""
     result = api_pull()
     assert isinstance(result, str)
     assert len(result) >= 8
