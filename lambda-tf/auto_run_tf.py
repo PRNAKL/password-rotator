@@ -4,7 +4,7 @@ This script:
 1. Initializes, plans, and applies Terraform configuration.
 2. Invokes the deployed Lambda function after successful deployment.
 """
-
+# pylint: disable=duplicate-code
 import subprocess
 import sys
 import json

@@ -1,5 +1,5 @@
 """Handles password rotation and backup of AWS Secrets to S3."""
-
+# pylint: disable=invalid-name
 import json
 import os
 import uuid
@@ -139,13 +139,13 @@ if __name__ == "__main__":
     try:
         users = get_secret()
         json_data = json.dumps(users)
-        temp_file_name = create_temp_file(1, "users.json", json_data)
+        TEMP_FILE_NAME = create_temp_file(1, "users.json", json_data)
 
-        bucket_name = "firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192"
-        object_name = "secrets/users.json"
+        S3_BUCKET_NAME = "firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192"
+        S3_OBJECT_KEY = "secrets/users.json"
 
-        s3_upload(temp_file_name, bucket_name, object_name)
-        os.remove(temp_file_name)
+        s3_upload(TEMP_FILE_NAME, S3_BUCKET_NAME, S3_OBJECT_KEY)
+        os.remove(TEMP_FILE_NAME)
 
         for email in users:
             users[email] = api_pull()
