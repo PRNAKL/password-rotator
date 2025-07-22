@@ -48,7 +48,7 @@ resource "aws_lambda_function" "my_lambda" {
     variables = {
       SECRET_NAME = var.secret_name
       BUCKET_NAME      = aws_s3_bucket.my_bucket.bucket
-      PASSWORD_API_URL = "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
+      PASSWORD_API_URL = var.API_url
     }
   }
 
