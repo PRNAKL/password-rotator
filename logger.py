@@ -1,10 +1,15 @@
+"""Provides a Logger class for structured logging with customizable levels."""
+
 import logging
 
+
 class Logger:
-    """ *** DOC STRING *** """
+    """Encapsulates a configurable logger using Python's built-in logging module."""
+
     def __init__(self):
-        '''DOC STRING'''
-        # Create logger
+        """
+        Initializes the logger with predefined formatting and INFO level by default.
+        """
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s [%(levelname)s] %(message)s",
@@ -12,27 +17,31 @@ class Logger:
         )
         self.logger = logging.getLogger(__name__)
 
-    def log_message(self, level: int = 20, message: str = "") -> None:
-        """ *** DOC STRING *** """
-        # reference logger via self, set the level of the logger if level is present
-        # log message at that level.
+    def log_message(self, level: int = logging.INFO, message: str = "") -> None:
+        """
+        Logs a message at the specified log level.
+
+        Args:
+            level (int): Logging level (e.g., logging.INFO, logging.ERROR).
+            message (str): The message to log.
+        """
         self.logger.log(msg=message, level=level)
 
     @staticmethod
     def pass_method():
-        """*** DOC STRING *** """
+        """
+        Placeholder method that returns None.
+
+        Returns:
+            None
+        """
         return None
 
 
 if __name__ == "__main__":
-    logger = Logger()
-    # DEBUG: 10
-    # INFO: 20
-    # WARNING: 30
-    # ERROR: 40
-    # CRITICAL: 50
-    logger.log_message(10, "message")
-    logger.log_message(20, "message")
-    logger.log_message(30, "message")
-    logger.log_message(40, "message")
-    logger.log_message(50, "message")
+    LOGGER = Logger()
+    LOGGER.log_message(logging.DEBUG, "This is a DEBUG message.")
+    LOGGER.log_message(logging.INFO, "This is an INFO message.")
+    LOGGER.log_message(logging.WARNING, "This is a WARNING message.")
+    LOGGER.log_message(logging.ERROR, "This is an ERROR message.")
+    LOGGER.log_message(logging.CRITICAL, "This is a CRITICAL message.")
