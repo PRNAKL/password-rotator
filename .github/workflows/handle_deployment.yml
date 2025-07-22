@@ -1,0 +1,11 @@
+name: Handle Deployment
+
+on:
+  workflow_call:
+
+jobs:
+  call-pylint:
+    uses: ./.github/workflows/lint.yml
+
+  call-tests:
+    uses: ./.github/workflows/test.yml

@@ -1,0 +1,11 @@
+name: Call the reusable deploy
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  call-reusable:
+    uses: ./.github/workflows/handle_deployment.yml
