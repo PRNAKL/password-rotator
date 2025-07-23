@@ -1,47 +1,103 @@
-"""Provides a Logger class for structured logging with customizable levels."""
+"""Unit tests for the password rotation system.
 
-import logging
+Tests include:
+- AWS Secrets Manager integration
+- S3 uploads
+- Temporary file handling
+- External password API usage
+"""
+
+# pylint: disable=duplicate-code, redefined-outer-name
+
+import json
+import os
+
+import pytest
+import boto3
+from moto import mock_aws
+
+# ✅ Import custom Logger class
+from logger import Logger
+
+from password_rotator import (
+    get_secret,
+    update_secret,
+    create_temp_file,
+    s3_upload,
+    api_pull,
+)
+
+# Dummy AWS credentials for Moto (used for mocking AWS services)
+os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
+
+# ✅ Create an instance of your custom logger
+logger = Logger()
 
 
-class Logger:
-    """Encapsulates a configurable logger using Python's built-in logging module."""
+@pytest.fixture
+def mock_aws_session():
+    """
+    Mocks AWS Secrets Manager and S3 using Moto.
 
-    def __init__(self):
-        """
-        Initializes the logger with predefined formatting and INFO level by default.
-        """
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s [%(levelname)s] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+    Yields:
+        boto3.Session: A mocked boto3 session with configured AWS clients.
+    """
+    with mock_aws():
+        session = boto3.Session(region_name='us-east-1')
+        secrets = session.client('secretsmanager')
+        secrets.create_secret(
+            Name='Users',
+            SecretString=json.dumps({
+                'alice@example.com': 'oldpass1',
+                'bob@example.com': 'oldpass2'
+            })
         )
-        self.logger = logging.getLogger(__name__)
-
-    def log_message(self, level: int = logging.INFO, message: str = "") -> None:
-        """
-        Logs a message at the specified log level.
-
-        Args:
-            level (int): Logging level (e.g., logging.INFO, logging.ERROR).
-            message (str): The message to log.
-        """
-        self.logger.log(msg=message, level=level)
-
-    @staticmethod
-    def pass_method():
-        """
-        Placeholder method that returns None.
-
-        Returns:
-            None
-        """
-        return None
+        session.client('s3').create_bucket(Bucket='test-bucket')
+        yield session
 
 
-if __name__ == "__main__":
-    LOGGER = Logger()
-    LOGGER.log_message(logging.DEBUG, "This is a DEBUG message.")
-    LOGGER.log_message(logging.INFO, "This is an INFO message.")
-    LOGGER.log_message(logging.WARNING, "This is a WARNING message.")
-    LOGGER.log_message(logging.ERROR, "This is an ERROR message.")
-    LOGGER.log_message(logging.CRITICAL, "This is a CRITICAL message.")
+def test_get_secret(mock_aws_session):
+    """Tests that get_secret() returns the expected data."""
+    logger.log_message(20, "Running test_get_secret")
+    secret = get_secret(session=mock_aws_session)
+    assert isinstance(secret, dict)
+    assert 'alice@example.com' in secret
+
+
+def test_update_secret(mock_aws_session):
+    """Tests that update_secret() properly modifies the secret value."""
+    logger.log_message(20, "Running test_update_secret")
+    new_data = {'alice@example.com': 'newpass1', 'bob@example.com': 'newpass2'}
+    update_secret('Users', new_data, session=mock_aws_session)
+    client = mock_aws_session.client('secretsmanager')
+    updated = client.get_secret_value(SecretId='Users')['SecretString']
+    assert json.loads(updated)['alice@example.com'] == 'newpass1'
+
+
+def test_create_temp_file_creates_file():
+    """Tests that create_temp_file() writes content to disk properly."""
+    logger.log_message(20, "Running test_create_temp_file_creates_file")
+    content = json.dumps({'user': 'pass'})
+    filename = create_temp_file(1, 'testfile.json', content)
+    with open(filename, 'r', encoding='utf-8') as f:
+        assert content in f.read()
+
+
+def test_s3_upload_and_read_back(mock_aws_session):
+    """Tests that s3_upload() stores and retrieves a file correctly."""
+    logger.log_message(20, "Running test_s3_upload_and_read_back")
+    content = json.dumps({'foo': 'bar'})
+    file_path = create_temp_file(1, 'foo.json', content)
+    s3_upload(file_path, 'test-bucket', 'backups/foo.json', session=mock_aws_session)
+    result = mock_aws_session.client('s3').get_object(Bucket='test-bucket', Key='backups/foo.json')
+    assert content in result['Body'].read().decode('utf-8')
+
+
+def test_api_pull_returns_password():
+    """Tests that api_pull() returns a valid string password."""
+    logger.log_message(20, "Running test_api_pull_returns_password")
+    result = api_pull()
+    assert isinstance(result, str)
+    assert len(result) >= 8

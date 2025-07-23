@@ -1,20 +1,17 @@
 """Handles password rotation and backup of AWS Secrets to S3."""
-# pylint: disable=invalid-name
+
 import json
 import os
 import uuid
-import logging
 import boto3
 import requests
 from botocore.exceptions import ClientError, BotoCoreError
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-logger = logging.getLogger(__name__)
+# ✅ Import the custom Logger class
+from logger import Logger
+
+# ✅ Create a logger instance
+logger = Logger()
 
 
 def api_pull():
@@ -27,16 +24,14 @@ def api_pull():
     Raises:
         requests.exceptions.RequestException: If the API call fails or times out.
     """
-    api_url = (
-        "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
-    )
+    api_url = "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
     try:
         response = requests.get(api_url, timeout=10)
         response.raise_for_status()
         result = response.json()
         return result.get("pws")[0]
     except requests.exceptions.RequestException as e:
-        logger.error("API request failed: %s", e)
+        logger.log_message(40, f"API request failed: {e}")
         raise
 
 
@@ -58,10 +53,10 @@ def get_secret(session=None):
     client = session.client("secretsmanager", region_name=region_name)
 
     try:
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-        return json.loads(get_secret_value_response["SecretString"])
+        response = client.get_secret_value(SecretId=secret_name)
+        return json.loads(response["SecretString"])
     except ClientError as e:
-        logger.error("Error retrieving secret: %s", e)
+        logger.log_message(40, f"Error retrieving secret: {e}")
         raise
 
 
@@ -84,11 +79,12 @@ def update_secret(secret_name, updated_dict, session=None):
 
     try:
         client.update_secret(
-            SecretId=secret_name, SecretString=json.dumps(updated_dict)
+            SecretId=secret_name,
+            SecretString=json.dumps(updated_dict)
         )
-        logger.info("Secret updated successfully!")
+        logger.log_message(20, "Secret updated successfully!")
     except ClientError as e:
-        logger.error("Error updating secret: %s", e)
+        logger.log_message(40, f"Error updating secret: {e}")
         raise
 
 
@@ -126,16 +122,16 @@ def s3_upload(file_path, bucket_name, object_name, session=None):
     if session is None:
         session = boto3.session.Session()
     s3 = session.client("s3")
+
     try:
         s3.upload_file(file_path, bucket_name, object_name)
-        logger.info("Uploaded %s to s3://%s/%s", file_path, bucket_name, object_name)
+        logger.log_message(20, f"Uploaded {file_path} to s3://{bucket_name}/{object_name}")
     except ClientError as e:
-        logger.error("Error uploading to S3: %s", e)
+        logger.log_message(40, f"Error uploading to S3: {e}")
         raise
 
 
 if __name__ == "__main__":
-    # Script entry point: Rotate AWS Secrets and back them up to S3
     try:
         users = get_secret()
         json_data = json.dumps(users)
@@ -153,6 +149,6 @@ if __name__ == "__main__":
         update_secret("Users", users)
 
     except (ClientError, BotoCoreError, requests.exceptions.RequestException) as e:
-        logger.error("Error during password rotation process: %s", e)
+        logger.log_message(40, f"Error during password rotation process: {e}")
     except Exception as e:  # pylint: disable=broad-except
-        logger.error("Unexpected error during password rotation process: %s", e)
+        logger.log_message(50, f"Unexpected error during password rotation process: {e}")
