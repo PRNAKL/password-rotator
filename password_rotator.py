@@ -7,10 +7,8 @@ import boto3
 import requests
 from botocore.exceptions import ClientError, BotoCoreError
 
-# ✅ Import the custom Logger class
 from logger import Logger
 
-# ✅ Create a logger instance
 logger = Logger()
 
 

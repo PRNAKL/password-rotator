@@ -14,7 +14,6 @@ import pytest
 import boto3
 from moto import mock_aws
 
-# ✅ Import custom Logger class
 from logger import Logger
 
 from password_rotator import (
@@ -30,7 +29,6 @@ os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
 os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
 os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
-# ✅ Create an instance of your custom logger
 logger = Logger()
 
 
