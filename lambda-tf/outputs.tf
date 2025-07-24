@@ -7,5 +7,5 @@ output "lambda_function_name" {
 # ─── Output: S3 Bucket Name ───────────────────────────────────────────────────
 output "s3_bucket_name" {
   description = "The name of the generated S3 bucket"
-  value       = aws_s3_bucket.my_bucket.bucket
+  value       = local.bucket_name
 }
