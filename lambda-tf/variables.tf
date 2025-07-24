@@ -18,3 +18,9 @@ variable "API_url" {
   default     = "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
   description = "The URL for the password generation API"
 }
+
+variable "existing_bucket_name" {
+  description = "prnakl-terraform-bucket"
+  type        = string
+  default     = ""
+}

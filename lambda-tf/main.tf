@@ -3,10 +3,11 @@ resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
 
-# ─── S3 Bucket ─────────────────────────────────────────────────────────────────
+# ─── Conditionally Create S3 Bucket ────────────────────────────────────────────
 resource "aws_s3_bucket" "my_bucket" {
+  count         = var.existing_bucket_name == "" ? 1 : 0
   bucket        = "prnakl-terraform-bucket-${random_id.bucket_suffix.hex}"
-  force_destroy = true  # Automatically delete all objects when the bucket is destroyed
+  force_destroy = true
 
   tags = {
     Environment = "dev"
@@ -14,7 +15,13 @@ resource "aws_s3_bucket" "my_bucket" {
   }
 }
 
-# ─── IAM Role for Lambda ────────────────────────────────────────────────────────────
+# ─── Unified Bucket Reference ─────────────────────────────────────────────────
+locals {
+  bucket_name = var.existing_bucket_name != "" ? var.existing_bucket_name : aws_s3_bucket.my_bucket[0].bucket
+  bucket_arn  = "arn:aws:s3:::${local.bucket_name}"
+}
+
+# ─── IAM Role for Lambda ──────────────────────────────────────────────────────
 resource "aws_iam_role" "lambda_exec_role" {
   name = "lambda_execution_role_v2"
 
@@ -32,28 +39,26 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
-# ─── Lambda Function ───────────────────────────────────────────────────────────
+# ─── Lambda Function ──────────────────────────────────────────────────────────
 resource "aws_lambda_function" "my_lambda" {
   function_name = "THETerraformLambda"
   role          = aws_iam_role.lambda_exec_role.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
 
-  # Path to ZIP archive of Lambda function
   filename         = "${path.module}/lambda_function.zip"
   source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
   timeout          = 30
 
-  # Optional Lambda layer for Pandas support
   layers = [
     "arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:30"
   ]
 
   environment {
     variables = {
-      SECRET_NAME      = var.secret_name         # Should be declared in variables.tf
-      BUCKET_NAME      = aws_s3_bucket.my_bucket.bucket
-      PASSWORD_API_URL = var.API_url             # Should be declared in variables.tf
+      SECRET_NAME      = var.secret_name
+      BUCKET_NAME      = local.bucket_name
+      PASSWORD_API_URL = var.API_url
     }
   }
 
@@ -63,14 +68,14 @@ resource "aws_lambda_function" "my_lambda" {
   }
 }
 
-# ─── Attach AWS-Managed Logging Policy to Lambda Role ─────────────────────────
+# ─── Attach AWS-Managed Logging Policy ────────────────────────────────────────
 resource "aws_iam_policy_attachment" "lambda_logs" {
   name       = "lambda_logs"
   roles      = [aws_iam_role.lambda_exec_role.name]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# ─── Custom IAM Policy for Lambda: Secrets Manager + S3 ───────────────────────
+# ─── Custom IAM Policy: Secrets Manager + S3 ──────────────────────────────────
 resource "aws_iam_policy" "lambda_secrets_s3_policy" {
   name        = "lambda_secrets_s3_policy_v2"
   description = "Allows Lambda to access Secrets Manager and S3 bucket for backups"
@@ -84,7 +89,7 @@ resource "aws_iam_policy" "lambda_secrets_s3_policy" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:UpdateSecret"
         ],
-        Resource = "*"  # For tighter security, specify ARNs if possible
+        Resource = "*"
       },
       {
         Effect = "Allow",
@@ -92,14 +97,14 @@ resource "aws_iam_policy" "lambda_secrets_s3_policy" {
           "s3:PutObject"
         ],
         Resource = [
-          "${aws_s3_bucket.my_bucket.arn}/*"
+          "${local.bucket_arn}/*"
         ]
       }
     ]
   })
 }
 
-# ─── Attach Custom Policy to Lambda Role ───────────────────────────────────────
+# ─── Attach Custom Policy to Lambda Role ──────────────────────────────────────
 resource "aws_iam_policy_attachment" "lambda_secrets_s3_attach" {
   name       = "lambda_secrets_s3_attach"
   roles      = [aws_iam_role.lambda_exec_role.name]
