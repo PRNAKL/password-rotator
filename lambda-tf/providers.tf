@@ -10,6 +10,5 @@ terraform {
 }
 
 provider "aws" {
-  profile = "devops-trainee"
   region  = "us-east-1"
 }
