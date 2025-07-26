@@ -9,3 +9,5 @@ on:
 jobs:
   call-reusable:
     uses: ./.github/workflows/handle_deployment.yml
+    with:
+      lambda_function_name: THETerraformLambda
