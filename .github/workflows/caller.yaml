@@ -9,4 +9,5 @@ jobs:
     uses: ANKPS/password_rotator_pipeline/.github/workflows/lint.yml@main
 
   call-tests:
+    uses: ./.github/workflows/test.yml
 
