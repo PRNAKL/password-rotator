@@ -1,10 +1,15 @@
 """Handles password rotation and backup of AWS Secrets to S3."""
 
 import json
+import os
 import uuid
 import boto3
-from botocore.exceptions import ClientError
 import requests
+from botocore.exceptions import ClientError, BotoCoreError
+
+from logger import Logger
+
+logger = Logger()
 
 
 def api_pull():
@@ -20,23 +25,26 @@ def api_pull():
     Raises:
         requests.exceptions.RequestException: If the API call fails or times out.
     """
-    api_url = 'https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T'
+    api_url = "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
     try:
         response = requests.get(api_url, timeout=10)
         response.raise_for_status()
         result = response.json()
-        return result.get('pws')[0]
+        return result.get("pws")[0]
     except requests.exceptions.RequestException as e:
-        print(f'API request failed: {e}')
-        raise e
+        logger.log_message(40, f"API request failed: {e}")
+        raise
 
 
-def get_secret(session =None):
+def get_secret(session=None):
     """
     Retrieve the current 'Users' secret from AWS Secrets Manager.
 
     Assumes the AWS profile 'devops-trainee' is configured.
     Parses the returned secret string into a Python dictionary.
+
+    Args:
+        session (boto3.session.Session, optional): A boto3 session object.
 
     Returns:
         dict: Dictionary containing the current user-password pairs.
@@ -48,19 +56,16 @@ def get_secret(session =None):
     region_name = "us-east-1"
 
     if session is None:
-        session = boto3.session.Session(profile_name='devops-trainee')
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name
-    )
+        session = boto3.session.Session()
+    client = session.client("secretsmanager", region_name=region_name)
 
     try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name)
-        secret_str = get_secret_value_response['SecretString']
-        return json.loads(secret_str)
+        response = client.get_secret_value(SecretId=secret_name)
+        return json.loads(response["SecretString"])
     except ClientError as e:
-        raise e
+        logger.log_message(40, f"Error retrieving secret: {e}")
+        raise
+
 
 def update_secret(secret_name, updated_dict, session=None):
     """
@@ -69,6 +74,7 @@ def update_secret(secret_name, updated_dict, session=None):
     Args:
         secret_name (str): The name of the secret to update.
         updated_dict (dict): Dictionary of updated key-value pairs (e.g., users and new passwords).
+        session (boto3.session.Session, optional): A boto3 session object.
 
     Returns:
         None
@@ -77,19 +83,19 @@ def update_secret(secret_name, updated_dict, session=None):
         botocore.exceptions.ClientError: If the secret update fails.
     """
     if session is None:
-        session = boto3.session.Session(profile_name='devops-trainee')
-    current_region = session.region_name or 'us-east-2'
-    client = session.client(service_name='secretsmanager',
-                            region_name=current_region)
+        session = boto3.session.Session()
+    region = session.region_name or "us-east-1"
+    client = session.client("secretsmanager", region_name=region)
 
     try:
-        client.put_secret_value(
+        client.update_secret(
             SecretId=secret_name,
             SecretString=json.dumps(updated_dict)
         )
-        print('Secret updated successfully!')
+        logger.log_message(20, "Secret updated successfully!")
     except ClientError as e:
-        print(f'Error! {e}')
+        logger.log_message(40, f"Error updating secret: {e}")
+        raise
 
 
 def create_temp_file(size, file_name, file_content):
@@ -105,14 +111,15 @@ def create_temp_file(size, file_name, file_content):
         file_content (str): Content to write into the file.
 
     Returns:
-        str: Name of the generated temporary file."""
-    random_file_name = '_'.join([str(uuid.uuid4().hex[:6]), file_name])
-    with open(random_file_name, 'w', encoding='utf-8') as f:
+        str: Name of the generated temporary file.
+    """
+    random_file_name = f"{uuid.uuid4().hex[:6]}_{file_name}"
+    with open(random_file_name, "w", encoding="utf-8") as f:
         f.write(str(file_content) * size)
     return random_file_name
 
 
-def s3_upload(file_path: str, bucket_name: str, object_name: str, session =None) -> None:
+def s3_upload(file_path, bucket_name, object_name, session=None):
     """
     Upload a local file to a specified AWS S3 bucket and object key.
 
@@ -120,6 +127,7 @@ def s3_upload(file_path: str, bucket_name: str, object_name: str, session =None)
         file_path (str): Path to the local file to upload.
         bucket_name (str): Name of the S3 bucket.
         object_name (str): Key (i.e., path) to store the object under in S3.
+        session (boto3.session.Session, optional): A boto3 session object.
 
     Returns:
         None
@@ -127,37 +135,40 @@ def s3_upload(file_path: str, bucket_name: str, object_name: str, session =None)
     Raises:
         botocore.exceptions.ClientError: If the upload fails.
     """
+    if session is None:
+        session = boto3.session.Session()
+    s3 = session.client("s3")
+
     try:
-        if session is None:
-            session = boto3.session.Session(profile_name='devops-trainee')
-        s3 = session.client('s3')
         s3.upload_file(file_path, bucket_name, object_name)
-        print(f'Uploaded {file_path} to s3://{bucket_name}/{object_name}')
+        logger.log_message(20, f"Uploaded {file_path} to s3://{bucket_name}/{object_name}")
     except ClientError as e:
-        print(e)
+        logger.log_message(40, f"Error uploading to S3: {e}")
+        raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     Main script logic:
     - Retrieves the 'Users' secret from Secrets Manager.
     - Backs up the current secret to an S3 bucket as a temporary JSON file.
     - Generates new passwords via API for each user and updates the secret.
     """
-    users = get_secret()
+    try:
+        users = get_secret()
+        json_data = json.dumps(users)
+        TEMP_FILE_NAME = create_temp_file(1, "users.json", json_data)
 
-    # Backup current secret to S3
-    json_data = json.dumps(users)
-    temp_file_name = create_temp_file(
-        size=1, file_name='users.json', file_content=json_data)
-    bucket_name = 'firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192'
-    object_name = 'secrets/users.json'
-    s3_upload(file_path=temp_file_name,
-              bucket_name=bucket_name, object_name=object_name)
+        S3_BUCKET_NAME = "firstpythonbucket-f9d567d1-46e0-4a5b-98bb-2b1e99cf4192"
+        S3_OBJECT_KEY = "secrets/users.json"
 
-    # Rotate passwords
-    for email in users:
-        new_pass = api_pull()
-        users[email] = new_pass
+        s3_upload(TEMP_FILE_NAME, S3_BUCKET_NAME, S3_OBJECT_KEY)
+        os.remove(TEMP_FILE_NAME)
 
-    update_secret("Users", users)
+        for email in users:
+            users[email] = api_pull()
+
+        update_secret("Users", users)
+
+    except (ClientError, BotoCoreError, requests.exceptions.RequestException) as e:
+        logger.log_message(40, f"Error during password rotation process: {e}")
