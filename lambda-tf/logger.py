@@ -1,5 +1,3 @@
-"""Custom Logger utility module for consistent logging across the project."""
-
 import logging
 
 
@@ -25,6 +23,26 @@ class Logger:
         """
         self.logger.log(msg=message, level=level)
 
+    def debug(self, message: str) -> None:
+        """Log a message with DEBUG level."""
+        self.log_message(logging.DEBUG, message)
+
+    def info(self, message: str) -> None:
+        """Log a message with INFO level."""
+        self.log_message(logging.INFO, message)
+
+    def warning(self, message: str) -> None:
+        """Log a message with WARNING level."""
+        self.log_message(logging.WARNING, message)
+
+    def error(self, message: str) -> None:
+        """Log a message with ERROR level."""
+        self.log_message(logging.ERROR, message)
+
+    def critical(self, message: str) -> None:
+        """Log a message with CRITICAL level."""
+        self.log_message(logging.CRITICAL, message)
+
     @staticmethod
     def pass_method():
         """Placeholder method with no behavior."""
@@ -38,8 +56,8 @@ if __name__ == "__main__":
     # WARNING: 30
     # ERROR: 40
     # CRITICAL: 50
-    logger.log_message(10, "message")
-    logger.log_message(20, "message")
-    logger.log_message(30, "message")
-    logger.log_message(40, "message")
-    logger.log_message(50, "message")
+    logger.debug("This is a debug message")
+    logger.info("This is an info message")
+    logger.warning("This is a warning message")
+    logger.error("This is an error message")
+    logger.critical("This is a critical message")
