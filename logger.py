@@ -26,29 +26,64 @@ class Logger:
         self.logger.log(level=level, msg=message)
 
     def debug(self, message: str) -> None:
-        """Log a message with DEBUG level."""
+        """
+        Log a message with DEBUG level.
+
+        Args:
+            message (str): The debug message to be logged.
+
+        Returns:
+            None
+        """
         self.log_message(logging.DEBUG, message)
 
     def info(self, message: str) -> None:
-        """Log a message with INFO level."""
+        """
+        Log a message with INFO level.
+
+        Args:
+            message (str): The informational message to be logged.
+
+        Returns:
+            None
+        """
         self.log_message(logging.INFO, message)
 
     def warning(self, message: str) -> None:
-        """Log a message with WARNING level."""
+        """
+        Log a message with WARNING level.
+
+        Args:
+            message (str): The warning message to be logged.
+
+        Returns:
+            None
+        """
         self.log_message(logging.WARNING, message)
 
     def error(self, message: str) -> None:
-        """Log a message with ERROR level."""
+        """
+        Log a message with ERROR level.
+
+        Args:
+            message (str): The error message to be logged.
+
+        Returns:
+            None
+        """
         self.log_message(logging.ERROR, message)
 
     def critical(self, message: str) -> None:
-        """Log a message with CRITICAL level."""
-        self.log_message(logging.CRITICAL, message)
+        """
+        Log a message with CRITICAL level.
 
-    @staticmethod
-    def pass_method() -> None:
-        """Placeholder method with no behavior."""
-        return None
+        Args:
+            message (str): The critical message to be logged.
+
+        Returns:
+            None
+        """
+        self.log_message(logging.CRITICAL, message)
 
 
 if __name__ == "__main__":

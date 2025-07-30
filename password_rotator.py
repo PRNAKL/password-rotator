@@ -16,6 +16,9 @@ def api_pull():
     """
     Pull a randomly generated password from the external API.
 
+    Uses the 'makemeapassword' API to fetch a single 12-character
+    alphanumeric password that includes symbols.
+
     Returns:
         str: A randomly generated password string.
 
@@ -37,11 +40,17 @@ def get_secret(session=None):
     """
     Retrieve the current 'Users' secret from AWS Secrets Manager.
 
+    Assumes the AWS profile 'devops-trainee' is configured.
+    Parses the returned secret string into a Python dictionary.
+
     Args:
         session (boto3.session.Session, optional): A boto3 session object.
 
     Returns:
-        dict: Parsed JSON dictionary representing the secret's key-value pairs.
+        dict: Dictionary containing the current user-password pairs.
+
+    Raises:
+        botocore.exceptions.ClientError: If the secret cannot be retrieved.
     """
     secret_name = "Users"
     region_name = "us-east-1"
@@ -60,15 +69,18 @@ def get_secret(session=None):
 
 def update_secret(secret_name, updated_dict, session=None):
     """
-    Update a secret in AWS Secrets Manager with new data.
+    Update a given secret in AWS Secrets Manager with new data.
 
     Args:
-        secret_name (str): The name or ARN of the secret to update.
-        updated_dict (dict): New secret data to store.
+        secret_name (str): The name of the secret to update.
+        updated_dict (dict): Dictionary of updated key-value pairs (e.g., users and new passwords).
         session (boto3.session.Session, optional): A boto3 session object.
 
     Returns:
         None
+
+    Raises:
+        botocore.exceptions.ClientError: If the secret update fails.
     """
     if session is None:
         session = boto3.session.Session()
@@ -90,13 +102,16 @@ def create_temp_file(size, file_name, file_content):
     """
     Create a temporary local file with a randomized prefix.
 
+    The file will be filled with the provided content repeated `size` times.
+    Useful for staging content (such as a secrets JSON) before uploading to S3.
+
     Args:
         size (int): Number of times to repeat the content string.
-        file_name (str): Name of the file to create.
+        file_name (str): Base name of the file to create.
         file_content (str): Content to write into the file.
 
     Returns:
-        str: Name of the generated file.
+        str: Name of the generated temporary file.
     """
     random_file_name = f"{uuid.uuid4().hex[:6]}_{file_name}"
     with open(random_file_name, "w", encoding="utf-8") as f:
@@ -106,16 +121,19 @@ def create_temp_file(size, file_name, file_content):
 
 def s3_upload(file_path, bucket_name, object_name, session=None):
     """
-    Upload a local file to an AWS S3 bucket.
+    Upload a local file to a specified AWS S3 bucket and object key.
 
     Args:
-        file_path (str): Local file path.
-        bucket_name (str): S3 bucket name.
-        object_name (str): Key name in the bucket.
+        file_path (str): Path to the local file to upload.
+        bucket_name (str): Name of the S3 bucket.
+        object_name (str): Key (i.e., path) to store the object under in S3.
         session (boto3.session.Session, optional): A boto3 session object.
 
     Returns:
         None
+
+    Raises:
+        botocore.exceptions.ClientError: If the upload fails.
     """
     if session is None:
         session = boto3.session.Session()
@@ -130,6 +148,12 @@ def s3_upload(file_path, bucket_name, object_name, session=None):
 
 
 if __name__ == "__main__":
+    """
+    Main script logic:
+    - Retrieves the 'Users' secret from Secrets Manager.
+    - Backs up the current secret to an S3 bucket as a temporary JSON file.
+    - Generates new passwords via API for each user and updates the secret.
+    """
     try:
         users = get_secret()
         json_data = json.dumps(users)
@@ -148,5 +172,3 @@ if __name__ == "__main__":
 
     except (ClientError, BotoCoreError, requests.exceptions.RequestException) as e:
         logger.log_message(40, f"Error during password rotation process: {e}")
-    except Exception as e:  # pylint: disable=broad-except
-        logger.log_message(50, f"Unexpected error during password rotation process: {e}")
