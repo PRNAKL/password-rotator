@@ -1,14 +1,14 @@
 """AWS Lambda handler to rotate Secrets Manager passwords and backup to S3."""
 
-import logging  # For logging level constants
 import json
 import os
 import uuid
-from logger import Logger  # noqa: E402
+import logging  # For logging level constants
 import boto3
 import requests
 from botocore.exceptions import ClientError
 
+from logger import Logger  # noqa: E402
 # Add parent directory of lambda-tf folder to sys.path to import custom logger
 
 
