@@ -6,8 +6,5 @@ on:
 
 jobs:
   call-reusable:
-    uses: ANKPS/password_rotator_pipeline/.github/workflows/lint.yml@main
-
-  call-tests:
-    uses: ./.github/workflows/test.yml
+    uses: ANKPS/password_rotator_pipeline/.github/workflows/call_deploy.yml@PRNAKL-11_GF
 
