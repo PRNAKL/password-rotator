@@ -148,12 +148,12 @@ def s3_upload(file_path, bucket_name, object_name, session=None):
 
 
 if __name__ == "__main__":
-    """
-    Main script logic:
-    - Retrieves the 'Users' secret from Secrets Manager.
-    - Backs up the current secret to an S3 bucket as a temporary JSON file.
-    - Generates new passwords via API for each user and updates the secret.
-    """
+    # """
+    # Main script logic:
+    # - Retrieves the 'Users' secret from Secrets Manager.
+    # - Backs up the current secret to an S3 bucket as a temporary JSON file.
+    # - Generates new passwords via API for each user and updates the secret.
+    # """
     try:
         users = get_secret()
         json_data = json.dumps(users)
