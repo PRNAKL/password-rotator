@@ -18,6 +18,6 @@ variable "API_url" {
 
 variable "existing_bucket_name" {
   type        = string
-  default     = ""
+  default     = "prnakl-terraform-bucket-8aae6c0e"
   description = "Optional: Use this to specify an existing S3 bucket for storing old passwords. Leave blank to create a new one."
 }
