@@ -34,7 +34,7 @@ resource "aws_lambda_function" "my_lambda" {
   }
 
   tags = {
-    Environment = "dev"v
+    Environment = "dev"
     Owner       = "you"
   }
 }
