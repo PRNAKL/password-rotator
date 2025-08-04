@@ -1,29 +1,4 @@
-# Randomized Suffix for S3 Bucket Name
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
-}
 
-# Conditionally Create S3 Bucket
-resource "aws_s3_bucket" "my_bucket" {
-  count         = var.existing_bucket_name == "" ? 1 : 0
-  bucket        = "prnakl-terraform-bucket-${random_id.bucket_suffix.hex}"
-  force_destroy = true
-
-  tags = {
-    Environment = "dev"
-    Owner       = "you"
-  }
-}
-
-# Unified Bucket Reference
-locals {
-  use_existing_bucket    = var.existing_bucket_name != ""
-  resolved_bucket_name   = local.use_existing_bucket ? var.existing_bucket_name : (
-    length(aws_s3_bucket.my_bucket) > 0 ? aws_s3_bucket.my_bucket[0].bucket : ""
-  )
-  bucket_name            = local.resolved_bucket_name
-  bucket_arn             = "arn:aws:s3:::${local.bucket_name}"
-}
 
 # IAM Role for Lambda
 resource "aws_iam_role" "lambda_exec_role" {
@@ -91,38 +66,3 @@ resource "aws_iam_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Custom IAM Policy: Secrets Manager + S3
-resource "aws_iam_policy" "lambda_secrets_s3_policy" {
-  name        = "lambda_secrets_s3_policy_v2"
-  description = "Allows Lambda to access Secrets Manager and S3 bucket for backups"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:UpdateSecret"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "s3:PutObject"
-        ],
-        Resource = [
-          "${local.bucket_arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-# Attach Custom Policy to Lambda Role
-resource "aws_iam_policy_attachment" "lambda_secrets_s3_attach" {
-  name       = "lambda_secrets_s3_attach"
-  roles      = [aws_iam_role.lambda_exec_role.name]
-  policy_arn = aws_iam_policy.lambda_secrets_s3_policy.arn
-}
