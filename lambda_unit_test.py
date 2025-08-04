@@ -16,7 +16,7 @@ from moto import mock_aws
 
 from logger import Logger
 
-from password_rotator import (
+from lambda_src.lambda_functions.password_rotator import (
     get_secret,
     update_secret,
     create_temp_file,

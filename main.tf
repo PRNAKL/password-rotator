@@ -74,7 +74,7 @@ source_code_hash = data.archive_file.zip_files["lambda_functions"].output_base64
     variables = {
       SECRET_NAME      = var.secret_name
       BUCKET_NAME      = local.bucket_name
-      PASSWORD_API_URL = var.API_url
+      API_url = var.API_url
     }
   }
 

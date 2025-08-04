@@ -8,8 +8,7 @@ import boto3
 import requests
 from botocore.exceptions import ClientError
 
-from logger import Logger  # noqa: E402
-# Add parent directory of lambda-tf folder to sys.path to import custom logger
+from logger import Logger
 
 
 logger = Logger()  # instantiate custom Logger
