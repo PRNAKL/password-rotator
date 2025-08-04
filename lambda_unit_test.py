@@ -15,7 +15,7 @@ import pytest
 from moto import mock_aws
 
 from shared.logger import Logger
-from shared.password_rotator import (
+from password_rotator import (
     get_secret,
     update_secret,
     create_temp_file,
