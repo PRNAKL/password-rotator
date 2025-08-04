@@ -43,6 +43,16 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+data "archive_file" "zip_files"{
+  for_each = toset([
+  for x in fileset("${path.module}/lambda_src/", "**") : split("/", x)[0]
+  if !endswith(x, ".zip")
+  ])
+  type = "zip"
+  source_dir ="${path.module}/lambda_src/${each.key}"
+  output_path ="${path.module}/lambda_src/${each.key}.zip"
+
+}
 
 
 # Lambda Function
@@ -52,8 +62,8 @@ resource "aws_lambda_function" "my_lambda" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
 
-  filename         = "${path.module}lambda_src/lambda_function.zip"
-  source_code_hash = filebase64sha256("${path.module}lambda_src/lambda_function.zip")
+filename         = data.archive_file.zip_files["lambda_functions"].output_path
+source_code_hash = data.archive_file.zip_files["lambda_functions"].output_base64sha256
   timeout          = 30
 
   layers = [
