@@ -8,7 +8,7 @@ import boto3
 import requests
 from botocore.exceptions import ClientError, BotoCoreError
 
-from shared.logger import Logger
+from logger import Logger
 
 logger = Logger()
 

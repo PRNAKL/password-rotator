@@ -1,14 +1,11 @@
-
-
-
-data "archive_file" "zip_files"{
+data "archive_file" "zip_files" {
   for_each = toset([
-  for x in fileset("${path.module}/lambda_src/", "**") : split("/", x)[0]
-  if !endswith(x, ".zip")
+    for x in fileset("${path.module}/lambda_src/", "**") : split("/", x)[0]
+    if !endswith(x, ".zip")
   ])
-  type = "zip"
-  source_dir ="${path.module}/lambda_src/${each.key}"
-  output_path ="${path.module}/lambda_src/${each.key}.zip"
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_src/${each.key}"
+  output_path = "${path.module}/lambda_src/${each.key}.zip"
 
 }
 
@@ -20,8 +17,8 @@ resource "aws_lambda_function" "my_lambda" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
 
-filename         = data.archive_file.zip_files["lambda_functions"].output_path
-source_code_hash = data.archive_file.zip_files["lambda_functions"].output_base64sha256
+  filename         = data.archive_file.zip_files["lambda_functions"].output_path
+  source_code_hash = data.archive_file.zip_files["lambda_functions"].output_base64sha256
   timeout          = 30
 
   layers = [
@@ -30,9 +27,9 @@ source_code_hash = data.archive_file.zip_files["lambda_functions"].output_base64
 
   environment {
     variables = {
-      SECRET_NAME      = var.secret_name
-      BUCKET_NAME      = local.bucket_name
-      API_url = var.API_url
+      SECRET_NAME = var.secret_name
+      BUCKET_NAME = local.bucket_name
+      API_url     = var.API_url
     }
   }
 

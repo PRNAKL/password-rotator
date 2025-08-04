@@ -17,10 +17,10 @@ resource "aws_s3_bucket" "my_bucket" {
 
 # Unified Bucket Reference
 locals {
-  use_existing_bucket    = var.existing_bucket_name != ""
-  resolved_bucket_name   = local.use_existing_bucket ? var.existing_bucket_name : (
+  use_existing_bucket = var.existing_bucket_name != ""
+  resolved_bucket_name = local.use_existing_bucket ? var.existing_bucket_name : (
     length(aws_s3_bucket.my_bucket) > 0 ? aws_s3_bucket.my_bucket[0].bucket : ""
   )
-  bucket_name            = local.resolved_bucket_name
-  bucket_arn             = "arn:aws:s3:::${local.bucket_name}"
+  bucket_name = local.resolved_bucket_name
+  bucket_arn  = "arn:aws:s3:::${local.bucket_name}"
 }
