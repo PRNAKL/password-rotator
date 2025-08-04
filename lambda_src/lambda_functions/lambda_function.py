@@ -1,15 +1,15 @@
 """AWS Lambda handler to rotate Secrets Manager passwords and backup to S3."""
 
 import json
+import logging  # For logging level constants
 import os
 import uuid
-import logging  # For logging level constants
+
 import boto3
 import requests
 from botocore.exceptions import ClientError
 
-from logger import Logger
-
+from shared.logger import Logger
 
 logger = Logger()  # instantiate custom Logger
 

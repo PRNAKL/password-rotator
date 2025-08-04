@@ -10,13 +10,12 @@ Tests include:
 import json
 import os
 
-import pytest
 import boto3
+import pytest
 from moto import mock_aws
 
-from logger import Logger
-
-from lambda_src.lambda_functions.password_rotator import (
+from shared.logger import Logger
+from shared.password_rotator import (
     get_secret,
     update_secret,
     create_temp_file,
