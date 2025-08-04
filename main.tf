@@ -17,7 +17,102 @@ resource "aws_s3_bucket" "my_bucket" {
 
 # Unified Bucket Reference
 locals {
-  bucket_name = var.existing_bucket_name != "" ? var.existing_bucket_name :
-    (length(aws_s3_bucket.my_bucket) > 0 ? aws_s3_bucket.my_bucket[0].bucket : "")
-  bucket_arn  = "arn:aws:s3:::${local.bucket_name}"
+  use_existing_bucket    = var.existing_bucket_name != ""
+  resolved_bucket_name   = local.use_existing_bucket ? var.existing_bucket_name : (
+    length(aws_s3_bucket.my_bucket) > 0 ? aws_s3_bucket.my_bucket[0].bucket : ""
+  )
+  bucket_name            = local.resolved_bucket_name
+  bucket_arn             = "arn:aws:s3:::${local.bucket_name}"
+}
+
+# IAM Role for Lambda
+resource "aws_iam_role" "lambda_exec_role" {
+  name = "lambda_execution_role_v2"
+
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+
+
+# Lambda Function
+resource "aws_lambda_function" "my_lambda" {
+  function_name = "THETerraformLambda"
+  role          = aws_iam_role.lambda_exec_role.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.9"
+
+  filename         = "${path.module}lambda_src/lambda_function.zip"
+  source_code_hash = filebase64sha256("${path.module}lambda_src/lambda_function.zip")
+  timeout          = 30
+
+  layers = [
+    "arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:30"
+  ]
+
+  environment {
+    variables = {
+      SECRET_NAME      = var.secret_name
+      BUCKET_NAME      = local.bucket_name
+      PASSWORD_API_URL = var.API_url
+    }
+  }
+
+  tags = {
+    Environment = "dev"
+    Owner       = "you"
+  }
+}
+
+# Attach AWS-Managed Logging Policy
+resource "aws_iam_policy_attachment" "lambda_logs" {
+  name       = "lambda_logs"
+  roles      = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Custom IAM Policy: Secrets Manager + S3
+resource "aws_iam_policy" "lambda_secrets_s3_policy" {
+  name        = "lambda_secrets_s3_policy_v2"
+  description = "Allows Lambda to access Secrets Manager and S3 bucket for backups"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:UpdateSecret"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject"
+        ],
+        Resource = [
+          "${local.bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Attach Custom Policy to Lambda Role
+resource "aws_iam_policy_attachment" "lambda_secrets_s3_attach" {
+  name       = "lambda_secrets_s3_attach"
+  roles      = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = aws_iam_policy.lambda_secrets_s3_policy.arn
 }
