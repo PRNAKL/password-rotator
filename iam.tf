@@ -1,6 +1,6 @@
 # IAM Role for Lambda
 resource "aws_iam_role" "lambda_exec_role" {
-  name = "lambda_execution_role_v2"
+  name = "lambda_execution_role_v3"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -18,7 +18,7 @@ resource "aws_iam_role" "lambda_exec_role" {
 
 # Custom IAM Policy: Secrets Manager + S3
 resource "aws_iam_policy" "lambda_secrets_s3_policy" {
-  name        = "lambda_secrets_s3_policy_v2"
+  name        = "lambda_secrets_s3_policy_v3"
   description = "Allows Lambda to access Secrets Manager and S3 bucket for backups"
 
   policy = jsonencode({
