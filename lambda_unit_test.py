@@ -33,6 +33,8 @@ logger = Logger()
 
 @pytest.fixture
 def mock_aws_session():
+
+
     """
     Mocks AWS Secrets Manager and S3 using Moto.
 
