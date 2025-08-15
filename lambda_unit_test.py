@@ -14,7 +14,7 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from logger import Logger
+from lambda_src.lambda_functions.logger import Logger
 from password_rotator import (
     get_secret,
     update_secret,
