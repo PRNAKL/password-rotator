@@ -8,6 +8,7 @@ Tests include:
 """
 # pylint: disable=redefined-outer-name
 import json
+import sys
 import os
 import uuid
 
@@ -18,6 +19,8 @@ from moto import mock_aws
 from botocore.exceptions import ClientError
 
 from lambda_src.lambda_functions.logger import Logger
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Dummy AWS credentials for Moto (used for mocking AWS services)
 os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
