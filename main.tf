@@ -1,13 +1,37 @@
-# ─── Randomized Suffix for S3 Bucket Name ──────────────────────────────────────
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
+data "archive_file" "zip_files" {
+  for_each = toset([
+    for x in fileset("${path.module}/lambda_src/", "**") : split("/", x)[0]
+    if !endswith(x, ".zip")
+  ])
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_src/${each.key}"
+  output_path = "${path.module}/lambda_src/${each.key}.zip"
+
 }
 
-# ─── Conditionally Create S3 Bucket ────────────────────────────────────────────
-resource "aws_s3_bucket" "my_bucket" {
-  count         = var.existing_bucket_name == "" ? 1 : 0
-  bucket        = "prnakl-terraform-bucket-${random_id.bucket_suffix.hex}"
-  force_destroy = true
+
+# Lambda Function
+resource "aws_lambda_function" "my_lambda" {
+  function_name = "THETerraformLambda"
+  role          = aws_iam_role.lambda_exec_role.arn
+  handler = "lambda_function.lambda_handler"
+  runtime       = "python3.9"
+
+  filename         = data.archive_file.zip_files["lambda_functions"].output_path
+  source_code_hash = data.archive_file.zip_files["lambda_functions"].output_base64sha256
+  timeout          = 30
+
+  layers = [
+    "arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python39:30"
+  ]
+
+  environment {
+    variables = {
+      SECRET_NAME = var.secret_name
+      BUCKET_NAME = local.bucket_name
+      API_url     = var.API_url
+    }
+  }
 
   tags = {
     Environment = "dev"
@@ -15,8 +39,9 @@ resource "aws_s3_bucket" "my_bucket" {
   }
 }
 
-# ─── Unified Bucket Reference ─────────────────────────────────────────────────
-locals {
-  bucket_name = var.existing_bucket_name != "" ? var.existing_bucket_name : aws_s3_bucket.my_bucket[0].bucket
-  bucket_arn  = "arn:aws:s3:::${local.bucket_name}"
+# Attach AWS-Managed Logging Policy
+resource "aws_iam_policy_attachment" "lambda_logs" {
+  name       = "lambda_logs"
+  roles      = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

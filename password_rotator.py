@@ -3,11 +3,12 @@
 import json
 import os
 import uuid
+
 import boto3
 import requests
 from botocore.exceptions import ClientError, BotoCoreError
 
-from logger import Logger
+from lambda_src.lambda_functions.logger import Logger
 
 logger = Logger()
 

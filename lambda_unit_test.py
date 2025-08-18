@@ -10,12 +10,11 @@ Tests include:
 import json
 import os
 
-import pytest
 import boto3
+import pytest
 from moto import mock_aws
 
-from logger import Logger
-
+from lambda_src.lambda_functions.logger import Logger
 from password_rotator import (
     get_secret,
     update_secret,
@@ -34,6 +33,8 @@ logger = Logger()
 
 @pytest.fixture
 def mock_aws_session():
+
+
     """
     Mocks AWS Secrets Manager and S3 using Moto.
 
