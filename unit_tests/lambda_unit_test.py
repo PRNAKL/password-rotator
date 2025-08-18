@@ -17,7 +17,7 @@ import requests
 from moto import mock_aws
 from botocore.exceptions import ClientError
 
-from logger import Logger
+from lambda_src.lambda_functions.logger import Logger
 
 # Dummy AWS credentials for Moto (used for mocking AWS services)
 os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
