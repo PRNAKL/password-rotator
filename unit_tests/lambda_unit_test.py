@@ -176,7 +176,6 @@ def test_s3_upload_and_read_back(mock_aws_session):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-
 def test_api_pull_returns_password():
     """Tests that api_pull() returns a valid string password."""
     logger.log_message(20, "Running test_api_pull_returns_password")
