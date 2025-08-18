@@ -30,7 +30,7 @@ resource "aws_lambda_function" "my_lambda" {
     variables = {
       SECRET_NAME = var.secret_name
       BUCKET_NAME = local.bucket_name
-      API_url     = var.API_url
+      API_url     = var.api_url
     }
   }
 
