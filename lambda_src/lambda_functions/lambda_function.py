@@ -9,7 +9,7 @@ import boto3
 import requests
 from botocore.exceptions import ClientError
 
-from lambda_src.lambda_functions.logger import Logger
+from logger import Logger
 
 logger = Logger()  # instantiate custom Logger
 

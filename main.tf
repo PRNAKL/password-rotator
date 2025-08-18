@@ -1,12 +1,13 @@
 data "archive_file" "zip_files" {
   for_each = toset([
-    for x in fileset("${path.module}/lambda_src/", "**") : split("/", x)[0]
-    if !endswith(x, ".zip")
+    for x in fileset("${path.module}/lambda_src/", "**") :
+    split("/", x)[0]
+    if !endswith(x, ".zip") && can(regex("/", x)) # only items in subdirectories
   ])
+
   type        = "zip"
   source_dir  = "${path.module}/lambda_src/${each.key}"
   output_path = "${path.module}/lambda_src/${each.key}.zip"
-
 }
 
 
@@ -29,7 +30,7 @@ resource "aws_lambda_function" "my_lambda" {
     variables = {
       SECRET_NAME = var.secret_name
       BUCKET_NAME = local.bucket_name
-      API_url     = var.API_url
+      API_url     = var.api_url
     }
   }
 

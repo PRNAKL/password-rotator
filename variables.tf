@@ -10,7 +10,7 @@ variable "secret_name" {
   description = "The name of the AWS Secrets Manager secret"
 }
 
-variable "API_url" {
+variable "api_url" {
   type        = string
   default     = "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
   description = "The URL for the password generation API"
