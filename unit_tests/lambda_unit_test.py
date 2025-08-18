@@ -26,7 +26,6 @@ os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
 
 logger = Logger()
 
-
 def api_pull():
     """Pull a randomly generated password from the external API."""
     api_url = (
