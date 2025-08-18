@@ -1,4 +1,4 @@
-"""Unit tests for the password rotation system and password rotator functionality.
+"""Unit tests for the password rotation system.
 
 Tests include:
 - AWS Secrets Manager integration
@@ -6,7 +6,6 @@ Tests include:
 - Temporary file handling
 - External password API usage
 """
-
 # pylint: disable=redefined-outer-name
 import json
 import os
@@ -15,36 +14,43 @@ import uuid
 import boto3
 import pytest
 import requests
-from botocore.exceptions import ClientError, BotoCoreError
 from moto import mock_aws
+from botocore.exceptions import ClientError
 
 from lambda_src.lambda_functions.logger import Logger
 
+# Dummy AWS credentials for Moto (used for mocking AWS services)
+os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
+
 logger = Logger()
 
-# ------------------------
-# Password Rotator Module
-# ------------------------
 
 def api_pull():
     """Pull a randomly generated password from the external API."""
-    api_url = "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
+    api_url = (
+        "https://makemeapassword.ligos.net/api/v1/alphanumeric/json?c=1&l=12&sym=T"
+    )
     try:
         response = requests.get(api_url, timeout=10)
         response.raise_for_status()
-        return response.json().get("pws")[0]
+        result = response.json()
+        return result.get("pws")[0]
     except requests.exceptions.RequestException as e:
         logger.log_message(40, f"API request failed: {e}")
         raise
 
 
 def get_secret(session=None):
-    """Retrieve the 'Users' secret from AWS Secrets Manager."""
+    """Retrieve the current 'Users' secret from AWS Secrets Manager."""
     secret_name = "Users"
     region_name = "us-east-1"
+
     if session is None:
         session = boto3.session.Session()
     client = session.client("secretsmanager", region_name=region_name)
+
     try:
         response = client.get_secret_value(SecretId=secret_name)
         return json.loads(response["SecretString"])
@@ -59,8 +65,12 @@ def update_secret(secret_name, updated_dict, session=None):
         session = boto3.session.Session()
     region = session.region_name or "us-east-1"
     client = session.client("secretsmanager", region_name=region)
+
     try:
-        client.update_secret(SecretId=secret_name, SecretString=json.dumps(updated_dict))
+        client.update_secret(
+            SecretId=secret_name,
+            SecretString=json.dumps(updated_dict)
+        )
         logger.log_message(20, "Secret updated successfully!")
     except ClientError as e:
         logger.log_message(40, f"Error updating secret: {e}")
@@ -80,27 +90,21 @@ def s3_upload(file_path, bucket_name, object_name, session=None):
     if session is None:
         session = boto3.session.Session()
     s3 = session.client("s3")
+
     try:
         s3.upload_file(file_path, bucket_name, object_name)
-        logger.log_message(20, f"Uploaded {file_path} to s3://{bucket_name}/{object_name}")
+        logger.log_message(
+            20,
+            f"Uploaded {file_path} to s3://{bucket_name}/{object_name}"
+        )
     except ClientError as e:
         logger.log_message(40, f"Error uploading to S3: {e}")
         raise
 
 
-# ------------------------
-# Pytest Fixtures
-# ------------------------
-
-# Dummy AWS credentials for Moto
-os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
-
-
 @pytest.fixture
 def mock_aws_session():
-    """Mocks AWS Secrets Manager and S3 using Moto."""
+    """Mimics AWS Secrets Manager and S3 using Moto."""
     with mock_aws():
         session = boto3.Session(region_name='us-east-1')
         secrets = session.client('secretsmanager')
@@ -115,10 +119,6 @@ def mock_aws_session():
         yield session
 
 
-# ------------------------
-# Tests
-# ------------------------
-
 def test_get_secret(mock_aws_session):
     """Tests that get_secret() returns the expected data."""
     logger.log_message(20, "Running test_get_secret")
@@ -130,7 +130,10 @@ def test_get_secret(mock_aws_session):
 def test_update_secret(mock_aws_session):
     """Tests that update_secret() properly modifies the secret value."""
     logger.log_message(20, "Running test_update_secret")
-    new_data = {'alice@example.com': 'newpass1', 'bob@example.com': 'newpass2'}
+    new_data = {
+        'alice@example.com': 'newpass1',
+        'bob@example.com': 'newpass2'
+    }
     update_secret('Users', new_data, session=mock_aws_session)
     client = mock_aws_session.client('secretsmanager')
     updated = client.get_secret_value(SecretId='Users')['SecretString']
@@ -142,20 +145,36 @@ def test_create_temp_file_creates_file():
     logger.log_message(20, "Running test_create_temp_file_creates_file")
     content = json.dumps({'user': 'pass'})
     filename = create_temp_file(1, 'testfile.json', content)
-    with open(filename, 'r', encoding='utf-8') as f:
-        assert content in f.read()
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            assert content in f.read()
+    finally:
+        if os.path.exists(filename):
+            os.remove(filename)
 
 
 def test_s3_upload_and_read_back(mock_aws_session):
     """Tests that s3_upload() stores and retrieves a file correctly."""
-    logger.log_message(20, "Running test_s3_upload_and_read_back")
+    logger.log_message(
+        20,
+        "Running test_s3_upload_and_read_back")
     content = json.dumps({'foo': 'bar'})
     file_path = create_temp_file(1, 'foo.json', content)
-    s3_upload(file_path, 'test-bucket', 'backups/foo.json', session=mock_aws_session)
-    result = mock_aws_session.client('s3').get_object(
-        Bucket='test-bucket', Key='backups/foo.json'
-    )
-    assert content in result['Body'].read().decode('utf-8')
+    try:
+        s3_upload(
+            file_path,
+            'test-bucket',
+            'backups/foo.json',
+            session=mock_aws_session
+        )
+        result = mock_aws_session.client('s3').get_object(
+            Bucket='test-bucket',
+            Key='backups/foo.json'
+        )
+        assert content in result['Body'].read().decode('utf-8')
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
 
 def test_api_pull_returns_password():
