@@ -6,7 +6,6 @@ Tests include:
 - Temporary file handling
 - External password API usage
 """
-# pylint: disable=redefined-outer-name
 import json
 import sys
 import os
