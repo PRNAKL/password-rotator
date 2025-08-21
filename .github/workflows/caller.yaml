@@ -2,9 +2,10 @@ name: Call the reusable deploy
 
 on:
   push:
-    branches: [ "*" ]
+    branches:
+      - "*"   # triggers on every branch
 
 jobs:
   call-reusable:
-     uses: ANKPS/password_rotator_pipeline/.github/workflows/handle_deployment.yml@PRNAKL-16_disco_GF
+    uses: ANKPS/password_rotator_pipeline/.github/workflows/handle_deployment.yml@PRNAKL-16_disco_GF
 
