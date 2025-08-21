@@ -6,4 +6,5 @@ on:
 
 jobs:
   call-reusable:
-    uses: ANKPS/password_rotator_pipeline/.github/workflows/handle_deployment.yml@PRNAKL-16_disco_GF
+     uses: ANKPS/password_rotator_pipeline/.github/workflows/handle_deployment.yml@8d8be034e24fb0c9db6e2faf13f9a97b2193c80f
+
