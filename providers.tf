@@ -10,11 +10,5 @@ terraform {
 }
 
 provider "aws" {
-  region  = "us-east-1"
-
-  assume_role {
-    role_arn = "arn:aws:iam::967246349943:role/invoke_lambda_permissions"
-    session_name = "github-actions"
-  }
+  region = "us-east-1"
 }
-
