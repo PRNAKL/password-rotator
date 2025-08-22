@@ -1,6 +1,6 @@
 data "archive_file" "zip_files" {
   for_each = toset([
-    for x in fileset("${path.module}/lambda_src/", "**") :
+    for x in fileset("${path.module}/lambda_src", "**") :
     split("/", x)[0]
     if !endswith(x, ".zip") && can(regex("/", x)) # only items in subdirectories
   ])
