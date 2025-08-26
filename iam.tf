@@ -58,3 +58,4 @@ resource "aws_iam_policy_attachment" "lambda_permissions_attach" {
   roles      = [aws_iam_role.lambda_exec_role.name]
   policy_arn = var.deploy_lambda_permissions
 }
+
