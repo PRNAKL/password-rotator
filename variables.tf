@@ -21,3 +21,8 @@ variable "existing_bucket_name" {
   default     = ""
   description = "Optional: Use this to specify an existing S3 bucket for storing old passwords. Leave blank to create a new one."
 }
+
+variable "deploy_lambda_permissions" {
+  description = "The account number or ARN for Lambda permissions"
+  type        = string
+}
