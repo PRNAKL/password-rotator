@@ -53,8 +53,7 @@ resource "aws_iam_policy_attachment" "lambda_secrets_s3_attach" {
 }
 
 # Attach Lambda deployment permissions from GitHub Secret ARN
-resource "aws_iam_policy_attachment" "lambda_permissions_attach" {
-  name       = "lambda_permissions_attach"
-  roles      = [aws_iam_role.lambda_exec_role.name]
+resource "aws_iam_role_policy_attachment" "lambda_permissions_attach" {
+  role       = aws_iam_role.lambda_exec_role.name
   policy_arn = var.deploy_lambda_permissions
 }

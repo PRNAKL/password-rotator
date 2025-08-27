@@ -23,6 +23,6 @@ variable "existing_bucket_name" {
 }
 
 variable "deploy_lambda_permissions" {
-  description = "The account number or ARN for Lambda permissions"
+  description = "The ARN for Lambda permissions"
   type        = string
 }
