@@ -14,3 +14,4 @@ jobs:
       contents: read
     secrets:                             # forward repo secrets to the reusable workflow
       DEPLOY_LAMBDA_PERMISSIONS: ${{ secrets.DEPLOY_LAMBDA_PERMISSIONS }}
+      AWS_LAMBDA_PERMISSIONS:  ${{ secrets.AWS_LAMBDA_PERMISSIONS }}
