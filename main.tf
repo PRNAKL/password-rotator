@@ -2,7 +2,7 @@
 data "archive_file" "lambda_zip" {
   for_each = toset([for x in fileset("${path.module}/lambda_src", "**") : split("/", "${x}")[0]])
   type = "zip"
-  source_dir = "${path.module}/src/${each.key}"
+  source_dir = "${path.module}/lambda_src/${each.key}"
   output_path = "${path.module}/${each.key}.zip"
 }
 # Lambda Function
