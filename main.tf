@@ -1,8 +1,10 @@
 # Create a ZIP file of everything in lambda_src/lambda_functions
 data "archive_file" "lambda_zip" {
-  for_each = toset([for x in fileset("${path.module}/lambda_src", "**" : split("/", "${x}")[0])])
+  for_each = toset([
+  for x in fileset("${path.module}/lambda_src", "**") : split("/", x)[0]
+])
   type = "zip"
-  source = "${path.module}/lambda_src/${each.key}"
+  source_dir = "${path.module}/lambda_src/${each.key}"
   output_path = "${path.module}/lambda_src/${each.key}.zip"
 }
 # Lambda Function
