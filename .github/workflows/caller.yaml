@@ -12,3 +12,5 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    secrets:                             # forward repo secrets to the reusable workflow
+      DEPLOY_LAMBDA_PERMISSIONS: ${{ secrets.DEPLOY_LAMBDA_PERMISSIONS }}
