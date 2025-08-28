@@ -2,9 +2,15 @@ name: Call the reusable deploy
 
 on:
   push:
-    branches: [ "*" ]
+    branches:
+      - "*"   # triggers on every branch
 
 jobs:
   call-reusable:
-    uses: ANKPS/password_rotator_pipeline/.github/workflows/handle_deployment.yml@main
-
+    uses: PRNAKL/password_rotator_pipeline/.github/workflows/handle_deployment.yml@main
+    permissions:
+      id-token: write
+      contents: read
+    secrets:                             # forward repo secrets to the reusable workflow
+      DEPLOY_LAMBDA_PERMISSIONS: ${{ secrets.DEPLOY_LAMBDA_PERMISSIONS }}
+      AWS_LAMBDA_PERMISSIONS:  ${{ secrets.AWS_LAMBDA_PERMISSIONS }}

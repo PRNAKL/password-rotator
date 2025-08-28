@@ -18,7 +18,7 @@ import requests
 from moto import mock_aws
 from botocore.exceptions import ClientError
 
-from lambda_src.lambda_functions.logger import Logger
+from lambda_src.password_rotator.logger import Logger
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
