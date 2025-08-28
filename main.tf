@@ -1,8 +1,13 @@
+locals {
+  lambda_dirs = toset([
+    for d in fileset("${path.module}/lambda_src/lambda_functions", "*") : d
+    if fileexists("${path.module}/lambda_src/lambda_functions/${d}/") # ensures it's a dir
+  ])
+}
+
 # Create a ZIP file of everything in lambda_src/lambda_functions
 data "archive_file" "lambda_zip" {
-  for_each = toset([
-  for x in fileset("${path.module}/lambda_src", "**") : split("/", x)[0]
-])
+  for_each = local.lambda_dirs
   type = "zip"
   source_dir = "${path.module}/lambda_src/${each.key}"
   output_path = "${path.module}/lambda_src/${each.key}.zip"
