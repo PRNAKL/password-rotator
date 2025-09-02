@@ -148,7 +148,7 @@ resource "aws_scheduler_schedule" "every_24_hrs" {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(24 hrs)"
+  schedule_expression = "rate(1 day)"
 
   target {
     arn      = aws_lambda_function.my_lambda["password_rotator"].arn
