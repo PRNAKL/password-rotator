@@ -104,6 +104,41 @@ resource "aws_iam_policy_attachment" "lambda_eventbridge_attach" {
   policy_arn = aws_iam_policy.lambda_eventbridge_policy.arn
 }
 
+# IAM Role for EventBridge Scheduler
+resource "aws_iam_role" "scheduler_role" {
+  name = "eventbridge_scheduler_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# Policy to allow scheduler to invoke password_rotator Lambda
+resource "aws_iam_role_policy" "scheduler_invoke_lambda" {
+  name = "scheduler-invoke-password-rotator"
+  role = aws_iam_role.scheduler_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "lambda:InvokeFunction",
+        Resource = "arn:aws:lambda:us-east-1:967246349943:function:password_rotator"
+      }
+    ]
+  })
+}
+
 # EventBridge Scheduler: trigger Lambda every 10 minutes
 resource "aws_scheduler_schedule" "every_10_min" {
   name       = "password_rotator-every-10-min"
@@ -117,6 +152,6 @@ resource "aws_scheduler_schedule" "every_10_min" {
 
   target {
     arn      = aws_lambda_function.my_lambda["password_rotator"].arn
-    role_arn = aws_iam_role.lambda_exec_role.arn
+    role_arn = aws_iam_role.scheduler_role.arn  # <-- use scheduler role now
   }
 }
