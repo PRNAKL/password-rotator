@@ -140,15 +140,15 @@ resource "aws_iam_role_policy" "scheduler_invoke_lambda" {
 }
 
 # EventBridge Scheduler: trigger Lambda every 10 minutes
-resource "aws_scheduler_schedule" "every_10_min" {
-  name       = "password_rotator-every-10-min"
+resource "aws_scheduler_schedule" "every_24_hrs" {
+  name       = "password_rotator-every-24-hrs"
   group_name = "default"
 
   flexible_time_window {
     mode = "OFF"
   }
 
-  schedule_expression = "rate(10 minutes)"
+  schedule_expression = "rate(24 hrs)"
 
   target {
     arn      = aws_lambda_function.my_lambda["password_rotator"].arn
