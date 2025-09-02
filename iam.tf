@@ -97,3 +97,20 @@ resource "aws_iam_policy_attachment" "lambda_eventbridge_attach" {
   roles      = [aws_iam_role.lambda_exec_role.name]
   policy_arn = aws_iam_policy.lambda_eventbridge_policy.arn
 }
+
+# EventBridge Scheduler: trigger Lambda every 10 minutes
+resource "aws_scheduler_schedule" "every_10_min" {
+  name       = "lambda-every-10-min"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "rate(10 minutes)"
+
+  target {
+    arn      = aws_lambda_function.my_lambda.arn
+    role_arn = aws_iam_role.lambda_exec_role.arn
+  }
+}
