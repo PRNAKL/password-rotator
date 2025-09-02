@@ -58,7 +58,7 @@ resource "aws_iam_role_policy_attachment" "lambda_permissions_attach" {
   policy_arn = var.deploy_lambda_permissions
 }
 
-# Custom IAM Policy: EventBridge Scheduler
+# Custom IAM Policy: EventBridge Scheduler (updated for Terraform/GitHub Actions)
 resource "aws_iam_policy" "lambda_eventbridge_policy" {
   name        = "lambda_eventbridge_policy_v1"
   description = "Allows Lambda (via Terraform) to manage EventBridge Scheduler"
@@ -70,9 +70,15 @@ resource "aws_iam_policy" "lambda_eventbridge_policy" {
         Sid    = "EventBridgeSchedulerFullAccess",
         Effect = "Allow",
         Action = [
-          "scheduler:*"
+          "scheduler:CreateSchedule",
+          "scheduler:UpdateSchedule",
+          "scheduler:DeleteSchedule",
+          "scheduler:DescribeSchedule",
+          "scheduler:ListSchedules",
+          "scheduler:TagResource",
+          "scheduler:UntagResource"
         ],
-        Resource = "*"
+        Resource = "arn:aws:scheduler:us-east-1:967246349943:schedule/*"
       },
       {
         Sid    = "IAMPassRoleForScheduler",
@@ -80,9 +86,9 @@ resource "aws_iam_policy" "lambda_eventbridge_policy" {
         Action = [
           "iam:PassRole"
         ],
-        Resource = "*",
+        Resource = "arn:aws:iam::967246349943:role/lambda_execution_role_v3",
         Condition = {
-          StringLike = {
+          StringEquals = {
             "iam:PassedToService" = "scheduler.amazonaws.com"
           }
         }
