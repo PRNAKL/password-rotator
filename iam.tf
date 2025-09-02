@@ -57,3 +57,43 @@ resource "aws_iam_role_policy_attachment" "lambda_permissions_attach" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = var.deploy_lambda_permissions
 }
+
+# Custom IAM Policy: EventBridge Scheduler
+resource "aws_iam_policy" "lambda_eventbridge_policy" {
+  name        = "lambda_eventbridge_policy_v1"
+  description = "Allows Lambda (via Terraform) to manage EventBridge Scheduler"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "EventBridgeSchedulerFullAccess",
+        Effect = "Allow",
+        Action = [
+          "scheduler:*"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "IAMPassRoleForScheduler",
+        Effect = "Allow",
+        Action = [
+          "iam:PassRole"
+        ],
+        Resource = "*",
+        Condition = {
+          StringLike = {
+            "iam:PassedToService" = "scheduler.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Attach EventBridge Policy to Lambda Execution Role
+resource "aws_iam_policy_attachment" "lambda_eventbridge_attach" {
+  name       = "lambda_eventbridge_attach"
+  roles      = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = aws_iam_policy.lambda_eventbridge_policy.arn
+}
