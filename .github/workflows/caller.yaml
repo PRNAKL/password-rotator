@@ -7,7 +7,7 @@ on:
 
 jobs:
   call-reusable:
-    uses: PRNAKL/password_rotator_pipeline/.github/workflows/handle_deployment.yml@main
+    uses: PRNAKL/password_rotator_pipeline/.github/workflows/handle_deployment.yml@PRNAKL-8_feature_GF
     permissions:
       id-token: write
       contents: read
