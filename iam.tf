@@ -58,7 +58,7 @@ resource "aws_iam_role_policy_attachment" "lambda_permissions_attach" {
   policy_arn = var.deploy_lambda_permissions
 }
 
-# Custom IAM Policy: EventBridge Scheduler (updated for Terraform/GitHub Actions)
+# Custom IAM Policy: EventBridge Scheduler
 resource "aws_iam_policy" "lambda_eventbridge_policy" {
   name        = "lambda_eventbridge_policy_v1"
   description = "Allows Lambda (via Terraform) to manage EventBridge Scheduler"
@@ -78,7 +78,7 @@ resource "aws_iam_policy" "lambda_eventbridge_policy" {
           "scheduler:TagResource",
           "scheduler:UntagResource"
         ],
-        Resource = "arn:aws:scheduler:us-east-1:967246349943:schedule/*"
+        Resource = var.eventbridge_scheduler
       },
       {
         Sid    = "IAMPassRoleForScheduler",
@@ -86,7 +86,7 @@ resource "aws_iam_policy" "lambda_eventbridge_policy" {
         Action = [
           "iam:PassRole"
         ],
-        Resource = "arn:aws:iam::967246349943:role/lambda_execution_role_v3",
+        Resource = var.lambda_exec_role_v3,
         Condition = {
           StringEquals = {
             "iam:PassedToService" = "scheduler.amazonaws.com"
@@ -133,7 +133,7 @@ resource "aws_iam_role_policy" "scheduler_invoke_lambda" {
       {
         Effect   = "Allow",
         Action   = "lambda:InvokeFunction",
-        Resource = "arn:aws:lambda:us-east-1:967246349943:function:password_rotator"
+        Resource = var.lambda_function_arn
       }
     ]
   })
@@ -152,6 +152,6 @@ resource "aws_scheduler_schedule" "every_24_hrs" {
 
   target {
     arn      = aws_lambda_function.my_lambda["password_rotator"].arn
-    role_arn = aws_iam_role.scheduler_role.arn  # <-- use scheduler role now
+    role_arn = aws_iam_role.scheduler_role.arn
   }
 }
