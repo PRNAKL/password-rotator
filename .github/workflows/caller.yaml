@@ -11,6 +11,9 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    secrets:                             # forward repo secrets to the reusable workflow
-      DEPLOY_LAMBDA_PERMISSIONS: ${{ secrets.DEPLOY_LAMBDA_PERMISSIONS }}
+    secrets:
       AWS_LAMBDA_PERMISSIONS:  ${{ secrets.AWS_LAMBDA_PERMISSIONS }}
+      DEPLOY_LAMBDA_PERMISSIONS: ${{ secrets.DEPLOY_LAMBDA_PERMISSIONS }}
+      EVENTBRIDGE_SCHEDULER: ${{ secrets.EVENTBRIDGE_SCHEDULER }}
+      LAMBDA_EXEC_ROLE_V3: ${{ secrets.LAMBDA_EXEC_ROLE_V3 }}
+      LAMBDA_FUNCTION_ARN: ${{ secrets.LAMBDA_FUNCTION_ARN }}

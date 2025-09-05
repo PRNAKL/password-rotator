@@ -26,3 +26,18 @@ variable "deploy_lambda_permissions" {
   description = "The ARN for Lambda permissions"
   type        = string
 }
+
+variable "eventbridge_scheduler" {
+  type        = string
+  description = "ARN (or ARN pattern) for EventBridge Scheduler resources"
+}
+
+variable "lambda_exec_role_v3" {
+  type        = string
+  description = "Full ARN of the Lambda execution role"
+}
+
+variable "lambda_function_arn" {
+  type        = string
+  description = "Full ARN of the Lambda function to invoke"
+}
