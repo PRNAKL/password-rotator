@@ -139,7 +139,7 @@ resource "aws_iam_role_policy" "scheduler_invoke_lambda" {
   })
 }
 
-# EventBridge Scheduler: trigger Lambda every 10 minutes
+# EventBridge Scheduler: trigger Lambda every 24 hours
 resource "aws_scheduler_schedule" "every_24_hrs" {
   name       = "password_rotator-every-24-hrs"
   group_name = "default"
@@ -193,6 +193,10 @@ resource "aws_sns_topic_subscription" "email_alert" {
   topic_arn = aws_sns_topic.lambda_alerts.arn
   protocol  = "email"
   endpoint  = "gunner.fox5274@gmail.com"
+
+  lifecycle {
+    ignore_changes = [endpoint]
+  }
 }
 
 # CloudWatch Alarm for Lambda errors
