@@ -220,3 +220,4 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_alarm" {
   alarm_description = "Alarm when Lambda errors occur"
   alarm_actions     = [aws_sns_topic.lambda_alerts.arn]
 }
+
