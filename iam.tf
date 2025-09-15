@@ -190,9 +190,11 @@ resource "aws_sns_topic" "lambda_alerts" {
 
 # SNS Email Subscription
 resource "aws_sns_topic_subscription" "email_alert" {
+  for_each = toset(var.alarm_notification_emails)
+
   topic_arn = aws_sns_topic.lambda_alerts.arn
   protocol  = "email"
-  endpoint  = "gunner.fox5274@gmail.com"
+  endpoint  = each.value
 
   lifecycle {
     ignore_changes = [endpoint]

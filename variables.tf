@@ -41,3 +41,11 @@ variable "lambda_function_arn" {
   type        = string
   description = "Full ARN of the Lambda function to invoke"
 }
+
+variable "alarm_notification_emails" {
+  description = "List of emails to receive CloudWatch alarm notifications"
+  type        = list(string)
+  default     = [
+    "gunner.fox5274@gmail.com", "williamkirk.ks22@gmail.com"
+  ]
+}
