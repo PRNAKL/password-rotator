@@ -12,9 +12,8 @@ jobs:
       id-token: write
       contents: read
     secrets:
-      AWS_LAMBDA_PERMISSIONS:  ${{ secrets.AWS_LAMBDA_PERMISSIONS }}
+      AWS_LAMBDA_PERMISSIONS:  ${{ secrets.IAM_ROLE }}
       DEPLOY_LAMBDA_PERMISSIONS: ${{ secrets.DEPLOY_LAMBDA_PERMISSIONS }}
       EVENTBRIDGE_SCHEDULER: ${{ secrets.EVENTBRIDGE_SCHEDULER }}
       LAMBDA_EXEC_ROLE_V3: ${{ secrets.LAMBDA_EXEC_ROLE_V3 }}
       LAMBDA_FUNCTION_ARN: ${{ secrets.LAMBDA_FUNCTION_ARN }}
-      AWS_LAMBDA_PERMISSIONS: ${{ secrets.IAM_ROLE }}
