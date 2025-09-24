@@ -7,6 +7,7 @@ Tests include:
 - External password API usage
 """
 # pylint: disable=redefined-outer-name
+# pylint: disable=duplicate-code
 import json
 import sys
 import os

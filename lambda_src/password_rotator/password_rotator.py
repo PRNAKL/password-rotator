@@ -1,7 +1,7 @@
 """AWS Lambda handler to rotate Secrets Manager passwords and backup to S3."""
 
 import json
-import logging  # For logging level constants
+import logging  # For logging level constants like INFO, ERROR
 import os
 import uuid
 
@@ -9,9 +9,10 @@ import boto3
 import requests
 from botocore.exceptions import ClientError
 
-from logger import Logger
+from logger import Logger  # Custom logger from your project
 
-logger = Logger()  # instantiate custom Logger
+# Create a logger instance (so all log messages go through this custom system)
+logger = Logger()
 
 
 def api_pull():
@@ -24,6 +25,7 @@ def api_pull():
         requests.exceptions.RequestException: If API call fails.
         ValueError: If API_url env var is missing.
     """
+    # API endpoint is stored in Lambda environment variables
     url = os.environ.get("API_url")
     if url is None:
         logger.log_message(logging.ERROR,
@@ -31,8 +33,10 @@ def api_pull():
         raise ValueError("API_url environment variable is not set")
 
     try:
+        # Make request to external password API
         response = requests.get(url, timeout=10)
-        response.raise_for_status()
+        response.raise_for_status()  # Raises error for non-200 responses
+        # The API returns JSON with {"pws": ["password"]}
         return response.json()["pws"][0]
     except requests.exceptions.RequestException as error:
         logger.log_message(logging.ERROR, f"API request failed: {error}")
@@ -45,6 +49,7 @@ def get_clients():
     Returns:
         tuple: (secrets_client, s3_client)
     """
+    # Default to us-east-1 if no region is set
     region = boto3.session.Session().region_name or "us-east-1"
     secrets_client = boto3.client("secretsmanager", region_name=region)
     s3_client = boto3.client("s3", region_name=region)
@@ -66,6 +71,7 @@ def fetch_current_secrets(secrets_client, secret_name):
     """
     try:
         current = secrets_client.get_secret_value(SecretId=secret_name)
+        # Secrets are stored as a JSON string → convert back to dict
         return json.loads(current["SecretString"])
     except ClientError as error:
         logger.log_message(logging.ERROR, f"Failed to fetch secrets: {error}")
@@ -81,8 +87,10 @@ def backup_to_s3(s3_client, bucket_name, secret_name, secrets):
         secret_name (str): Name of the secret.
         secrets (dict): Secrets data.
     """
+    # Create unique filename for backup (avoids overwriting old backups)
     backup_filename = f"{uuid.uuid4().hex[:6]}_{secret_name}_backup.json"
     try:
+        # Upload file to S3
         s3_client.put_object(
             Bucket=bucket_name,
             Key=backup_filename,
@@ -107,6 +115,7 @@ def rotate_passwords(secrets):
         dict: Updated secrets.
     """
     for email in secrets:
+        # Replace each password with a new one pulled from API
         secrets[email] = api_pull()
     return secrets
 
@@ -140,6 +149,7 @@ def lambda_handler(_event, _context):
     Returns:
         dict: Response with status code and message.
     """
+    # Read required env vars
     secret_name = os.environ.get("SECRET_NAME")
     bucket_name = os.environ.get("BUCKET_NAME")
 
@@ -153,9 +163,11 @@ def lambda_handler(_event, _context):
             "body": json.dumps({"error": "SECRET_NAME or BUCKET_NAME env vars missing"}),
         }
 
+    # Create AWS clients
     secrets_client, s3_client = get_clients()
 
     try:
+        # Steps of rotation
         secrets = fetch_current_secrets(secrets_client, secret_name)
         backup_to_s3(s3_client, bucket_name, secret_name, secrets)
         updated_secrets = rotate_passwords(secrets)
@@ -167,6 +179,7 @@ def lambda_handler(_event, _context):
             ),
         }
     except ClientError as error:
+        # Return error message in Lambda response
         return {
             "statusCode": 500,
             "body": json.dumps({"error": str(error)}),
